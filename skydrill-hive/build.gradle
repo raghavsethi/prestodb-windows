@@ -1,0 +1,51 @@
+apply plugin: 'java'
+apply plugin: 'maven'
+
+group = 'io.panyu.skydrill'
+
+if (project.hasProperty("prestoVersion")) {
+    version = prestoVersion
+} else {
+    version = '0.205'
+    ext.prestoVersion = version
+}
+
+description = """skydrill-hive"""
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+configurations.all {
+}
+
+repositories {
+     maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
+     maven { url "http://repo.maven.apache.org/maven2" }
+}
+dependencies {
+    compile group: 'com.facebook.presto', name: 'presto-hive', version:"${prestoVersion}"
+    compile group: 'com.facebook.presto.hadoop', name: 'hadoop-apache2', version:'2.7.4-1'
+    compile group: 'io.airlift', name: 'configuration', version:'0.170'
+    runtime files('../presto-hadoop-apache2/target/hadoop-apache2-2.9.0.jar')
+    testCompile(group: 'org.testng', name: 'testng', version:'6.10') {
+exclude(module: 'junit')
+exclude(module: 'guice')
+    }
+    testCompile group: 'io.airlift', name: 'testing', version:'0.170'
+    testCompile group: 'org.assertj', name: 'assertj-core', version:'3.8.0'
+    testCompile group: 'com.facebook.presto', name: 'presto-hive', version:"${prestoVersion}"
+    testCompile group: 'com.facebook.presto', name: 'presto-main', version:"${prestoVersion}"
+    testCompile group: 'dnsjava', name: 'dnsjava', version:'2.1.7'
+    compile group: 'com.facebook.presto', name: 'presto-spi', version:"${prestoVersion}"
+    compile group: 'io.airlift', name: 'slice', version:'0.35'
+    compile group: 'io.airlift', name: 'units', version:'1.0'
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-annotations', version:'2.8.1'
+    compile group: 'org.openjdk.jol', name: 'jol-core', version:'0.2'
+}
+
+//packaging tests
+task packageTests(type: Jar) {
+  from sourceSets.test.output
+  classifier = 'tests'
+}
+artifacts.archives packageTests

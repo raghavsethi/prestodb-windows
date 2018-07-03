@@ -1,0 +1,73 @@
+{
+  "rootGroups": [
+    {
+      "name": "global",
+      "softMemoryLimit": "80%",
+      "hardConcurrencyLimit": 100,
+      "maxQueued": 1000,
+      "schedulingPolicy": "weighted",
+      "jmxExport": true,
+      "subGroups": [
+        {
+          "name": "data_definition_${USER}",
+          "softMemoryLimit": "10%",
+          "hardConcurrencyLimit": 3,
+          "maxQueued": 10,
+          "schedulingWeight": 1
+        },
+        {
+          "name": "adhoc_${USER}",
+          "softMemoryLimit": "10%",
+          "hardConcurrencyLimit": 2,
+          "maxQueued": 1,
+          "schedulingWeight": 9,
+          "schedulingPolicy": "query_priority"
+        },
+        {
+          "name": "pipeline",
+          "softMemoryLimit": "20%",
+          "hardConcurrencyLimit": 5,
+          "maxQueued": 100,
+          "schedulingWeight": 1,
+          "jmxExport": true,
+          "subGroups": [
+            {
+              "name": "pipeline_${USER}",
+              "softMemoryLimit": "10%",
+              "hardConcurrencyLimit": 1,
+              "maxQueued": 100,
+              "schedulingPolicy": "query_priority"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "admin",
+      "softMemoryLimit": "100%",
+      "hardConcurrencyLimit": 200,
+      "maxQueued": 100,
+      "schedulingPolicy": "query_priority",
+      "jmxExport": true
+    }
+  ],
+  "selectors": [
+    {
+      "user": "bob",
+      "group": "admin"
+    },
+    {
+      "source": ".*pipeline.*",
+      "queryType": "DATA_DEFINITION",
+      "group": "global.data_definition_${USER}"
+    },
+    {
+      "source": ".*pipeline.*",
+      "group": "global.pipeline.pipeline_${USER}"
+    },
+    {
+      "group": "global.adhoc_${USER}"
+    }
+  ],
+  "cpuQuotaPeriod": "1h"
+}

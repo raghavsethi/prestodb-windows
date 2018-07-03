@@ -1,0 +1,216 @@
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Skydrill Catalog Browser</title>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+  <script src="/cat/jquery.min.js"></script>
+  <style type="text/css">
+    body {
+    font: 12px Consolas;
+    }
+
+    #container {
+    box-sizing: border-box;
+    width: 100%;
+    padding-left: 10px;
+    }
+
+    #canvas {
+    float:left;
+    box-sizing: border-box;
+    width: 34%;
+    padding: 15px 15px 15px 15px;
+    margin: 15px auto 30px auto;
+    border: 0px solid #ddd;
+    background: #fff;
+    }
+
+    #datacanvas {
+    float: right;
+    box-sizing: border-box;
+    width: 65%;
+    margin: 15px auto 30px auto;
+    }
+
+    .indented {
+    padding-left: 2em;
+    }
+
+    .btn {
+    width: 18px;
+    border: 1px solid #ddd;
+    margin: 1px;
+    padding: 1px;
+    line-height: 16px;
+    background: #fff;
+    }
+
+    .header {
+    width: 10%;
+    }
+    .content{
+    word-wrap:break-word;
+    }
+
+    table{
+    width: 100%;
+    table-layout:fixed;
+    font: 12px Consolas;
+    }
+
+    table,th,td {
+    box-sizing: border-box;
+    border: 1px solid #ddd;
+    border-collapse: collapse;
+    padding: 5px 5px 5px 5px;
+    }
+  </style>
+</head>
+<body>
+<div id="container">
+  <div id="canvas"></div>
+  <div id="datacanvas"></div>
+</div>
+<script>
+  var currentElement = $('#canvas')[0];
+  var currentNode = null;
+
+  function getChildren(path, callback) {
+    $.ajax( { type: "GET",
+              url:  "/v1/cat/children",
+              data: {path: path},
+              success: callback,
+              timeout: 10000,
+              dataType: "json" } );
+  };
+
+  function getDataStat(path, callback) {
+    $.ajax( { type: "GET",
+              url:  "/v1/cat/node",
+              data: {path: path},
+              error: function(x) { console.log(x); },
+              success: callback,
+              timeout: 10000,
+              dataType: "json" } );
+  };
+
+  function writeChildren(znodes) {
+    if (znodes == null) {
+      return;
+    }
+    else {
+      if (window.currentElement != null) {
+        additems(window.currentElement, znodes);
+      }
+    }
+  }
+
+  function writeDataAndStat(data) {
+    $('#datacanvas').html('<table class="tbl"><tr><td class="header">Data</td><td class="content">' + JSON.stringify(data.data) + '</td></tr><tr><td class="header">Stat</td><td class="content">' + JSON.stringify(data.stat) + '</td></tr></table>');
+  }
+
+  function additems(currentitem, children) {
+    if (children.length < 1) {
+      return;
+    }
+    var itempath;
+    var itemid;
+    if (currentitem.id == 'canvas') {
+      itempath = '';
+      itemid = 'div';
+    }
+    else {
+      itempath = currentitem.children[0].textContent;
+      itemid = currentitem.id + '.';
+    }
+    var idx = 0;
+    while (idx < children.length) {
+      path = itempath + '/' + stripquotes(children[idx]);
+      $('<div/>', {
+          id: itemid + idx,
+          class: "indented",
+          html: '<textarea style="display:none" class="nodepath">' + path + '</textarea>'
+                  + '<button onclick="btnClick_handle(this)" class="btn">+</button>'
+                  + '<span class="nodename" onclick="node_click(this)">'
+                  + stripquotes(children[idx]) + '</span>'
+                  + '<textarea style="display:none" class="nodedata"></textarea>'
+      }).appendTo(currentitem);
+      idx++;
+    }
+  }
+
+  function btnClick_handle(btnClicked) {
+    var divClicked = btnClicked.parentElement;
+    var btnState = checkState(btnClicked.textContent);
+    window.currentElement = divClicked;
+    btnClicked.textContent = flipBtn(btnClicked.textContent);
+    if (btnState == 'collapsed') {
+        expandNode(divClicked);
+    }
+    if (btnState == 'expanded') {
+        collapseNode(divClicked);
+    }
+  }
+
+  function checkState(btnText) {
+    if (btnText == '-') return 'expanded';
+    else return 'collapsed';
+  }
+
+  function flipBtn(btnText) {
+    if (btnText == '+') return '-';
+    if (btnText == '-') return '+';
+    return '+';
+  }
+
+  function expandNode() {
+    var path = window.currentElement.children[0].textContent;
+    getChildren(path, function(x) { writeChildren(x);});
+  }
+
+  function collapseNode(divClicked) {
+    $(divClicked).children("div").remove();
+  }
+
+  function stripquotes(expr) {
+    return (expr.replace(/\"/g, ""));
+  }
+
+  function resetCanvas() {
+    $('#canvas').children('div').remove();
+    $('#datacanvas').html('<br/>');
+    window.currentElement = document.getElementById('canvas')
+  }
+
+  function node_click(node) {
+    if (window.currentNode != null)
+        unHighlight(window.currentNode);
+    window.currentNode = node;
+    highlight(node);
+    getNodeData(node);
+  }
+
+  function getNodeData(node) {
+    var path = window.currentNode.parentElement.children[0].textContent;
+    getDataStat(path, function(x){ console.log(x); writeDataAndStat(x);});
+  }
+
+  function highlight(node) {
+    $(node).css({
+        "background-color": "yellow"
+    })
+  }
+
+  function unHighlight(node) {
+    $(node).css({
+        "background-color": "white"
+    })
+  }
+
+  $(document).ready(function(){
+    resetCanvas();
+    getChildren("/", function(x) { writeChildren(x);});
+  });
+
+</script>
+</body>
+</html>

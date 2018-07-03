@@ -1,0 +1,52 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package io.panyu.skydrill.connector.thrift;
+
+import com.facebook.presto.connector.thrift.DefaultThriftHeaderProvider;
+import com.facebook.presto.connector.thrift.ThriftHeaderProvider;
+import com.facebook.presto.connector.thrift.api.PrestoThriftService;
+import com.facebook.presto.spi.Plugin;
+import com.facebook.presto.spi.connector.ConnectorFactory;
+import com.google.common.collect.ImmutableList;
+import com.google.inject.Module;
+
+import static com.facebook.presto.connector.thrift.location.ExtendedSimpleAddressSelectorBinder.extendedSimpleAddressSelector;
+import static com.google.common.base.MoreObjects.firstNonNull;
+import static com.google.inject.Scopes.SINGLETON;
+import static io.airlift.drift.client.guice.DriftClientBinder.driftClientBinder;
+
+public class SkydrillThriftPlugin
+         implements Plugin
+{
+    @Override
+    public Iterable<ConnectorFactory> getConnectorFactories()
+    {
+        return ImmutableList.of(new ThriftConnectorFactory(getClassLoader(), getModule()));
+    }
+
+    private static ClassLoader getClassLoader()
+    {
+        return firstNonNull(Thread.currentThread().getContextClassLoader(), SkydrillThriftPlugin.class.getClassLoader());
+    }
+
+    private Module getModule()
+    {
+        return binder -> {
+            binder.bind(ThriftHeaderProvider.class).to(DefaultThriftHeaderProvider.class).in(SINGLETON);
+            driftClientBinder(binder)
+                    .bindDriftClient(PrestoThriftService.class)
+                    .withAddressSelector(extendedSimpleAddressSelector());
+        };
+    }
+}

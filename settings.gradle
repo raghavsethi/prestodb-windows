@@ -1,0 +1,2 @@
+rootProject.name = 'skydrill'
+include ':skydrill-hive', ':skydrill-base-jdbc', ':skydrill-main', ':skydrill-postgresql', ':skydrill-sqlserver', ':skydrill-thrift'
