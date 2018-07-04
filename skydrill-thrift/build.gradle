@@ -1,22 +1,11 @@
 apply plugin: 'java'
 apply plugin: 'maven'
 
-group = 'io.panyu.skydrill'
-
-if (project.hasProperty("prestoVersion")) {
-    version = prestoVersion
-} else {
-    version = '0.205'
-    ext.prestoVersion = version
-}
-
 description = """skydrill-thrift"""
+group = 'io.panyu.skydrill'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
-
-configurations.all {
-}
 
 repositories {
      maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
@@ -36,23 +25,23 @@ dependencies {
     compile group: 'io.airlift.drift', name: 'drift-transport-netty', version:'1.12'
     compile group: 'com.google.guava', name: 'guava', version:'24.1-jre'
     compile group: 'com.google.code.findbugs', name: 'jsr305', version:'3.0.2'
-    compile group: 'io.airlift', name: 'bootstrap', version:'0.171'
-    compile group: 'io.airlift', name: 'log', version:'0.171'
+    compile group: 'io.airlift', name: 'bootstrap', version:"${airliftVersion}"
+    compile group: 'io.airlift', name: 'log', version:"${airliftVersion}"
     compile group: 'org.weakref', name: 'jmxutils', version:'1.19'
-    compile group: 'io.airlift', name: 'stats', version:'0.171'
+    compile group: 'io.airlift', name: 'stats', version:"${airliftVersion}"
     compile group: 'com.google.inject', name: 'guice', version:'4.2.0'
     compile group: 'javax.inject', name: 'javax.inject', version:'1'
-    compile group: 'io.airlift', name: 'configuration', version:'0.171'
+    compile group: 'io.airlift', name: 'configuration', version:"${airliftVersion}"
     compile group: 'javax.validation', name: 'validation-api', version:'1.1.0.Final'
-    compile group: 'io.airlift', name: 'concurrent', version:'0.171'
-    runtime group: 'io.airlift', name: 'log-manager', version:'0.171'
+    compile group: 'io.airlift', name: 'concurrent', version:"${airliftVersion}"
+    runtime group: 'io.airlift', name: 'log-manager', version:"${airliftVersion}"
     testCompile(group: 'org.testng', name: 'testng', version:'6.10') {
 exclude(module: 'junit')
 exclude(module: 'guice')
     }
     testCompile group: 'com.facebook.presto', name: 'presto-thrift-testing-server', version:"${prestoVersion}"
     testCompile group: 'io.airlift.drift', name: 'drift-server', version:'1.12'
-    testCompile group: 'io.airlift', name: 'testing', version:'0.171'
+    testCompile group: 'io.airlift', name: 'testing', version:"${airliftVersion}"
     testCompile group: 'com.facebook.presto', name: 'presto-tests', version:"${prestoVersion}"
     compile group: 'com.facebook.presto', name: 'presto-main', version:"${prestoVersion}"
     compile(group: 'com.facebook.presto', name: 'presto-spi', version:"${prestoVersion}")

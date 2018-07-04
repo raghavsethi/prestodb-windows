@@ -1,19 +1,12 @@
 apply plugin: 'java'
 apply plugin: 'maven'
 
-group = 'io.panyu.skydrill'
-
-if (project.hasProperty("prestoVersion")) {
-  version = prestoVersion
-} else {
-  version = '0.205'
-  ext.prestoVersion = version
-}
-
 description = """skydrill-main"""
+group = 'io.panyu.skydrill'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
+
 tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'
     options.compilerArgs += ["-Xlint:deprecation"]

@@ -13,15 +13,22 @@
  */
 package io.panyu.skydrill.plugin.jdbc;
 
-import com.facebook.presto.plugin.jdbc.*;
+import com.facebook.presto.plugin.jdbc.DriverConnectionFactory;
+import com.facebook.presto.plugin.jdbc.JdbcColumnHandle;
+import com.facebook.presto.plugin.jdbc.JdbcConnectorId;
+import com.facebook.presto.plugin.jdbc.JdbcSplit;
+import com.facebook.presto.plugin.jdbc.JdbcTableHandle;
+import com.facebook.presto.plugin.jdbc.JdbcTableLayoutHandle;
 import com.facebook.presto.spi.ConnectorSession;
 import com.facebook.presto.spi.ConnectorSplitSource;
 import com.facebook.presto.spi.SchemaTableName;
 import com.facebook.presto.spi.predicate.TupleDomain;
 import com.google.common.collect.ImmutableMap;
-import io.panyu.skydrill.plugin.jdbc.metastore.JdbcMetastore;
+
 import io.panyu.skydrill.plugin.jdbc.metastore.ZkJdbcMetastore;
 import io.panyu.skydrill.plugin.jdbc.metastore.ZkJdbcMetastoreConfig;
+
+import org.apache.curator.test.TestingServer;
 import org.h2.Driver;
 
 import java.sql.Connection;
@@ -45,10 +52,12 @@ final class TestingDatabase
 
     private final Connection connection;
     private final JdbcClient jdbcClient;
+    private final TestingServer zk;
 
     public TestingDatabase()
             throws Exception
     {
+        zk = new TestingServer(2181, true);
         System.setProperty("zookeeper.connect.string", "127.0.0.1:2181");
         String connectionUrl = "jdbc:h2:mem:test" + System.nanoTime();
         jdbcClient = new BaseJdbcClient(
@@ -87,9 +96,10 @@ final class TestingDatabase
 
     @Override
     public void close()
-            throws SQLException
+            throws Exception
     {
         connection.close();
+        zk.close();
     }
 
     public Connection getConnection()

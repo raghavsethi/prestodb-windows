@@ -1,31 +1,21 @@
 apply plugin: 'java'
 apply plugin: 'maven'
 
-group = 'io.panyu.skydrill'
-
-if (project.hasProperty("prestoVersion")) {
-    version = prestoVersion
-} else {
-    version = '0.205'
-    ext.prestoVersion = version
-}
-
 description = """skydrill-postgresql"""
+group = 'io.panyu.skydrill'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
-
-configurations.all {
-}
 
 repositories {
      maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
      maven { url "http://repo.maven.apache.org/maven2" }
 }
+
 dependencies {
     compile project(':skydrill-base-jdbc')
     compile group: 'com.facebook.presto', name: 'presto-base-jdbc', version:"${prestoVersion}"
-    compile group: 'io.airlift', name: 'configuration', version:'0.170'
+    compile group: 'io.airlift', name: 'configuration', version:"${airliftVersion}"
     compile group: 'com.google.guava', name: 'guava', version:'24.1-jre'
     compile group: 'com.google.inject', name: 'guice', version:'4.2.0'
     compile group: 'org.postgresql', name: 'postgresql', version:'42.1.4'
@@ -35,8 +25,8 @@ exclude(module: 'junit')
 exclude(module: 'guice')
     }
     testCompile group: 'org.assertj', name: 'assertj-core', version:'3.8.0'
-    testCompile group: 'io.airlift', name: 'testing', version:'0.170'
-    testCompile group: 'io.airlift', name: 'json', version:'0.170'
+    testCompile group: 'io.airlift', name: 'testing', version:"${airliftVersion}"
+    testCompile group: 'io.airlift', name: 'json', version:"${airliftVersion}"
     testCompile group: 'com.facebook.presto', name: 'presto-main', version:"${prestoVersion}"
     testCompile group: 'com.facebook.presto', name: 'presto-tpch', version:"${prestoVersion}"
     testCompile group: 'io.airlift.tpch', name: 'tpch', version:'0.9'
@@ -53,6 +43,7 @@ task packageTests(type: Jar) {
   from sourceSets.test.output
   classifier = 'tests'
 }
+
 artifacts.archives packageTests
 
 task makeDistro(type: Copy) {

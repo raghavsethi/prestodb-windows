@@ -30,6 +30,7 @@ import static com.facebook.presto.tests.QueryAssertions.copyTpchTables;
 import static com.facebook.presto.tpch.TpchMetadata.TINY_SCHEMA_NAME;
 import static io.airlift.testing.Closeables.closeAllSuppress;
 
+@SuppressWarnings( "deprecation" )
 public final class JdbcQueryRunner
 {
     private JdbcQueryRunner()

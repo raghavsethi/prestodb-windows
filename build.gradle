@@ -1,67 +1,72 @@
-def prestoVersion = "0.205"
-def targetPath = "target"
-def prestoTarget = targetPath + "/presto-server-${prestoVersion}"
-def prestoServerCache = "${System.env.TEMP}/presto/presto-server-${prestoVersion}.tar.gz"
+description = 'skydrill-presto'
+group = 'io.panyu.skydrill'
 
-def download(url, outfile) {
-  if (!(new File(outfile)).exists()) {
-    exec { executable "curl" args "-k", "-L", url, "-o", outfile }
-  }
+allprojects {
+  version = "0.205"
+  ext.prestoVersion = "${version}"
+  ext.airliftVersion = "0.171"
+}
+
+configurations {
+  deploy
+}
+
+repositories {
+  maven { url "http://repo.maven.apache.org/maven2" }
+}
+
+dependencies {
+  deploy group: 'com.facebook.presto', name: 'presto-server', version:"${prestoVersion}", ext: 'tar.gz'
+  deploy group: 'com.facebook.presto', name: 'presto-cli', version:"${prestoVersion}", classifier: 'executable'
 }
 
 task makeTarget {
   doLast {
-    if ("${System.env.TEMP}" == "") {
-      throw new GradleException('TEMP environment variable not set')
-    }
-
-    //downloadPrerequisite
-    ["presto", "openjdk"].each { d -> (new File("${System.env.TEMP}/" + d)).mkdir() }
-    download("https://repo1.maven.org/maven2/com/facebook/presto/presto-server/${prestoVersion}/presto-server-${prestoVersion}.tar.gz", prestoServerCache)
+    def targetPath = "target"
+    def prestoTarget = targetPath + "/presto-server-${prestoVersion}"
+    def jdbcDependencies = ['skydrill*', 'curator*', 'zookeeper*', 'json*', 'jackson*', 'presto-main*']
 
     delete targetPath
-    [prestoServerCache].each{ p ->
-      copy { from tarTree(resources.gzip("${p}")) into targetPath }
-    }
+    copy { from tarTree(resources.gzip(configurations.deploy.find {it.name.contains("presto-server-${prestoVersion}")}))
+           into targetPath }
 
     ["presto-server-${prestoVersion}"].each{ p ->
       ["bin", "etc", "sbin"].each { f -> copy { from 'skydrill-main/'+"${f}" into targetPath + '/'+"${p}"+'/' + "${f}" }}}
 
     // update presto server
-    copy { from 'skydrill-main/build/libs' 
-           into prestoTarget + '/lib' 
-           include 'curator*', 'zookeeper*', 'jetty-*', 'json-simple*', 'skydrill*', 'log4j*', 'tpch*', 'presto-tpch*'}
+    copy { from 'skydrill-main/build/libs'
+      into prestoTarget + '/lib'
+      include 'curator*', 'zookeeper*', 'jetty-*', 'json-simple*', 'skydrill*', 'log4j*', 'tpch*', 'presto-tpch*'}
+
+    copy { from configurations.deploy.find {it.name.contains("presto-cli-${prestoVersion}")}
+          into prestoTarget + '/bin/cli' }
 
     // update hive plugin
     delete prestoTarget + '/plugin/hive-hadoop2/hadoop-apache2-2.7.4-1.jar'
     copy { from 'presto-hadoop-apache2/target/hadoop-apache2-2.9.0.jar' into prestoTarget + '/plugin/hive-hadoop2' }
     copy { from 'skydrill-hive/build/libs' into prestoTarget + '/plugin/hive-hadoop2' }
 
-    // update postgresql plugin
-    copy { from 'skydrill-postgresql/build/libs'
-           into prestoTarget + '/plugin/postgresql'
-           include 'skydrill*', 'curator*', 'zookeeper*', 'json*', 'jackson*', 'presto-main*' }
-
-    // update sqlserver plugin
-    copy { from 'skydrill-sqlserver/build/libs'
-      into prestoTarget + '/plugin/sqlserver'
-      include 'skydrill*', 'curator*', 'zookeeper*', 'json*', 'jackson*', 'presto-main*' }
-
     // update thrift plugin
     copy { from 'skydrill-thrift/build/libs'
       into prestoTarget + '/plugin/presto-thrift'
       include 'skydrill*', 'curator*', 'zookeeper*', 'json*', 'jackson*', 'presto-main*' }
 
+    // update postgresql plugin
+    copy { from 'skydrill-postgresql/build/libs'
+      into prestoTarget + '/plugin/postgresql'
+      include jdbcDependencies }
+
+    // update sqlserver plugin
+    copy { from 'skydrill-sqlserver/build/libs'
+      into prestoTarget + '/plugin/sqlserver'
+      include jdbcDependencies }
   }
-} 
+}
 
 task clean() {
   doLast {
-    if ("${System.env.TEMP}" == "") {
-      throw new GradleException('TEMP environment variable not set')
-    }
     tasks.xbuildHadoop2.execute()
-  }  
+  }
 }
 
 task xbuildHadoop2(type: Exec) {
@@ -89,12 +94,6 @@ task buildSkyDrillSqlserver(type: GradleBuild) {
   dir = 'skydrill-sqlserver'
   startParameter.projectProperties.put("prestoVersion", "${prestoVersion}")
   tasks = gradle.startParameter.taskNames.contains("clean") ? ['clean', 'jar', 'makeDistro'] : ['jar', 'makeDistro']
-}
-
-task buildSkyDrillStripe(type: GradleBuild) {
-  dir = 'skydrill-stripe'
-  startParameter.projectProperties.put("prestoVersion", "${prestoVersion}")
-  tasks = gradle.startParameter.taskNames.contains("clean") ? ['clean', 'jar'] : ['jar']
 }
 
 task buildSkyDrillThrift(type: GradleBuild) {

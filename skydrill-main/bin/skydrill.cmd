@@ -55,7 +55,7 @@
     goto :eof
   )
 
-  set corecommands=coordinator worker server proxy repl shell cli zookeeper zshell dfs
+  set corecommands=server cli zookeeper dfs
   for %%i in ( %corecommands% ) do (
     if %SKYDRILL-command% == %%i set corecommand=true  
   )
@@ -66,23 +66,7 @@
   )
 
   set path=%SKYDRILL_BIN_DIR%;%SKYDRILL_SBIN_DIR%;%windir%\system32;%windir%
-  @rem echo %JAVA% %DEBUG_OPTS% %JAVA_HEAP_MAX% %SKYDRILL_OPTS% %CLASS% %SKYDRILL-command-arguments%
   call %JAVA% %DEBUG_OPTS% %JAVA_HEAP_MAX% %SKYDRILL_OPTS% %CLASS% %SKYDRILL-command-arguments%
-  goto :eof
-
-:coordinator
-  set CLASS=io.panyu.skydrill.server
-  set SKYDRILL_OPTS=%SKYDRILL_SERVER_OPTS% %SKYDRILL_OPTS%
-  goto :eof
-
-:worker
-  set CLASS=io.panyu.skydrill.server
-  set SKYDRILL_OPTS=%SKYDRILL_SERVER_OPTS% %SKYDRILL_OPTS%
-  goto :eof
-
-:proxy
-  set CLASS=io.panyu.skydrill.server
-  set SKYDRILL_OPTS=%SKYDRILL_SERVER_OPTS% %SKYDRILL_OPTS%
   goto :eof
 
 :server
@@ -98,15 +82,9 @@
   call :print_usage
   goto :eof
 
-:shell
 :cli
   set CLASSPATH=%SKYDRILL_BIN_DIR%\cli\*
   set CLASS=com.facebook.presto.cli.Presto
-  set SKYDRILL_OPTS=%SKYDRILL_CLIENT_OPTS% %SKYDRILL_OPTS% 
-  goto :eof
-
-:zshell
-  set CLASS=org.apache.zookeeper.ZooKeeperMain
   set SKYDRILL_OPTS=%SKYDRILL_CLIENT_OPTS% %SKYDRILL_OPTS% 
   goto :eof
 
@@ -120,11 +98,6 @@
   set CLASS=org.apache.zookeeper.server.quorum.QuorumPeerMain
   set ZOOKEEPER_OPTS=-XX:+UseG1GC -XX:MaxGCPauseMillis=10 -XX:-PrintGC -Dlog4j.configuration=%LOG4J_CONF_FILE% -Dcom.sun.management.jmxremote.port=%ZOOKEEPER_JMX_PORT%
   set SKYDRILL_OPTS=%SKYDRILL_SERVER_OPT% %ZOOKEEPER_OPTS% %SKYDRILL_OPTS%
-  goto :eof
-
-:repl
-  set CLASS=clojure.main
-  set SKYDRILL_OPTS=%SKYDRILL_CLIENT_OPTS% %SKYDRILL_OPTS% 
   goto :eof
 
 :version
@@ -153,12 +126,9 @@
   @echo where COMMAND is one of:
   @echo   help
   @echo.
-  @echo   coordinator          launch presto coordinator
-  @echo   worker               launch presto worker
   @echo   server               launch presto server
   @echo.
-  @echo   repl                 launch clojure repl
-  @echo   shell                launch presto shell
+  @echo   cli                  launch presto shell
   @echo   version              print the version
   @echo.
   @echo   zookeeper            launch zookeeper daemon
