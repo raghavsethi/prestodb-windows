@@ -89,7 +89,7 @@
   goto :eof
 
 :dfs
-  set CLASSPATH=%SKYDRILL_HOME%\plugin\hive\*
+  set CLASSPATH=%SKYDRILL_HOME%\plugin\hive-hadoop2\*
   set CLASS=org.apache.hadoop.fs.FsShell
   set SKYDRILL_OPTS=%SKYDRILL_CLIENT_OPTS% %SKYDRILL_OPTS% 
   goto :eof
