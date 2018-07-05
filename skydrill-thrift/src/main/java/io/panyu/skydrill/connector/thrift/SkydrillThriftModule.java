@@ -61,9 +61,12 @@ public class SkydrillThriftModule
                     return NORMAL_EXCEPTION;
                 });
 
-        binder.bind(ThriftConnector.class).in(Scopes.SINGLETON);
-        binder.bind(ThriftMetadata.class).to(SkydrillThriftMetadata.class).in(Scopes.SINGLETON);
-        binder.bind(ThriftSplitManager.class).in(Scopes.SINGLETON);
+        binder.bind(ThriftConnector.class).to(SkydrillThriftConnector.class);
+        binder.bind(ThriftMetadata.class).to(SkydrillThriftMetadata.class);
+        binder.bind(ThriftSplitManager.class).to(SkydrillThriftSplitManager.class);
+        binder.bind(SkydrillThriftConnector.class).in(Scopes.SINGLETON);
+        binder.bind(SkydrillThriftMetadata.class).in(Scopes.SINGLETON);
+        binder.bind(SkydrillThriftSplitManager.class).in(Scopes.SINGLETON);
         binder.bind(ThriftPageSourceProvider.class).in(Scopes.SINGLETON);
         configBinder(binder).bindConfig(ThriftConnectorConfig.class);
         binder.bind(ThriftSessionProperties.class).in(Scopes.SINGLETON);

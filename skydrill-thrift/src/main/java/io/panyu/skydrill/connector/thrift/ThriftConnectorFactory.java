@@ -60,7 +60,7 @@ public class ThriftConnectorFactory implements ConnectorFactory {
                     .setRequiredConfigurationProperties(config)
                     .initialize();
 
-            return injector.getInstance(ThriftConnector.class);
+            return injector.getInstance(SkydrillThriftConnector.class);
         }
         catch (InterruptedException ie) {
             Thread.currentThread().interrupt();

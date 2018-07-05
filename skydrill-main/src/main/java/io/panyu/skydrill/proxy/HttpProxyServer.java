@@ -26,6 +26,8 @@ import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
+
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -45,8 +47,8 @@ public class HttpProxyServer
             // reverse proxy servlet
             new ServletHolder(new AsyncMiddleManServlet() {
               private String getProxyTo() {
-                String proxyTo = getCoordinatorServiceUri();
-                return (proxyTo == null)? String.format("http://0.0.0.0:%s", config.getHttpPort()) : proxyTo;
+                Optional<String> proxyTo = Optional.ofNullable(getCoordinatorServiceUri());
+                return proxyTo.orElse(String.format("http://0.0.0.0:%s", config.getHttpPort()));
               }
 
               @Override

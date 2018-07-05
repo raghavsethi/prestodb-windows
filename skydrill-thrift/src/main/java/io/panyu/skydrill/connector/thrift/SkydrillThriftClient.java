@@ -1,32 +1,19 @@
 package io.panyu.skydrill.connector.thrift;
 
-import com.facebook.presto.connector.ConnectorId;
 import com.facebook.presto.connector.thrift.api.PrestoThriftService;
 import com.facebook.presto.metadata.ViewDefinition;
 import com.facebook.presto.plugin.jdbc.JdbcConnectorId;
 import com.facebook.presto.spi.ConnectorSession;
 import com.facebook.presto.spi.SchemaTableName;
-import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableList;
 import io.airlift.drift.client.DriftClient;
-import io.airlift.json.JsonCodec;
-import io.airlift.json.JsonCodecFactory;
 import io.airlift.log.Logger;
 import io.panyu.skydrill.plugin.jdbc.metastore.JdbcMetastore;
-import org.apache.curator.RetryPolicy;
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.CuratorFrameworkFactory;
-import org.apache.curator.retry.ExponentialBackoffRetry;
-import org.apache.zookeeper.CreateMode;
-import org.apache.zookeeper.data.Stat;
 
 import javax.inject.Inject;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
-import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.util.Objects.requireNonNull;
 
 public class SkydrillThriftClient

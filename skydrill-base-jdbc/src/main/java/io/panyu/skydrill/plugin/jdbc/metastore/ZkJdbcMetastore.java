@@ -20,6 +20,8 @@ import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.data.Stat;
 
 import javax.inject.Inject;
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -27,7 +29,7 @@ import java.util.concurrent.TimeUnit;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
 public class ZkJdbcMetastore
-        implements JdbcMetastore
+        implements JdbcMetastore, Closeable
 {
   private static final Logger log = Logger.get(ZkJdbcMetastore.class);
   private static final Splitter nsSplitter = Splitter.on('.').trimResults().omitEmptyStrings();
@@ -42,7 +44,7 @@ public class ZkJdbcMetastore
   public ZkJdbcMetastore(JdbcConnectorId connectorId,
                          ZkJdbcMetastoreConfig config) {
     this.connectorId = connectorId;
-    this.viewRootPath = config.getViewRootPath();
+    this.viewRootPath = String.format("%s/%s", config.getViewRootPath(), connectorId);
     this.viewCodec = jsonCodecFactory.jsonCodec(ViewDefinition.class);
 
     RetryPolicy retry = new ExponentialBackoffRetry(1000, 5);
@@ -86,7 +88,7 @@ public class ZkJdbcMetastore
   public List<SchemaTableName> listViews(String schema) {
     try {
       checkAndStartCurator();
-      return curator.getChildren().forPath(String.format("%s/%s", viewRootPath, connectorId))
+      return curator.getChildren().forPath(viewRootPath)
               .stream()
               .filter(x -> x.startsWith(schema))
               .map(this::getSchemaTableFromPath)
@@ -144,15 +146,14 @@ public class ZkJdbcMetastore
       curator.start();
       curator.blockUntilConnected(10, TimeUnit.SECONDS);
 
-      String viewRoot = String.format("%s/%s", viewRootPath, connectorId);
-      if (curator.checkExists().forPath(viewRoot) == null) {
-        curator.create().creatingParentsIfNeeded().withMode(CreateMode.PERSISTENT).forPath(viewRoot);
+      if (curator.checkExists().forPath(viewRootPath) == null) {
+        curator.create().creatingParentsIfNeeded().withMode(CreateMode.PERSISTENT).forPath(viewRootPath);
       }
     }
   }
 
   private String getPathString(String rootPath, SchemaTableName table) {
-    return String.format("%s/%s/%s.%s", rootPath, connectorId, table.getSchemaName(), table.getTableName());
+    return String.format("%s/%s.%s", rootPath, table.getSchemaName(), table.getTableName());
   }
 
   private SchemaTableName getSchemaTableFromPath(String schemaTablePath){
@@ -160,4 +161,9 @@ public class ZkJdbcMetastore
     return new SchemaTableName(parts.get(0), parts.get(1));
   }
 
+  @Override
+  public void close() throws IOException {
+    if (curator.getState() != CuratorFrameworkState.STOPPED)
+      curator.create();
+  }
 }
