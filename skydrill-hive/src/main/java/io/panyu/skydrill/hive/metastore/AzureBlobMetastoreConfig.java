@@ -28,7 +28,7 @@ public class AzureBlobMetastoreConfig
         return normalizedCatalogDir();
     }
 
-    @Config("hive.metastore.catalog.dir")
+    @Config("hive.metastore.catalog-dir")
     @ConfigDescription("Hive metastore catalog directory")
     public AzureBlobMetastoreConfig setCatalogDirectory(String catalogDirectory)
     {

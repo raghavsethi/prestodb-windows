@@ -61,12 +61,12 @@ public final class PostgreSqlQueryRunner
             Map<String, String> properties = ImmutableMap.<String, String>builder()
                     .put("connection-url", server.getJdbcUrl())
                     .put("allow-drop-table", "true")
-                    .put("view.root.path", "/skydrill/views")
+                    .put("skydrill.view-root-path", "/skydrill/views")
                     .build();
 
             createSchema(server.getJdbcUrl(), "tpch");
 
-            System.setProperty("zookeeper.connect.string", "127.0.0.1:2181");
+            System.setProperty("zookeeper.connect-string", "127.0.0.1:2181");
             queryRunner.installPlugin(new PostgreSqlPlugin());
             queryRunner.createCatalog("postgresql", "postgresql", properties);
 

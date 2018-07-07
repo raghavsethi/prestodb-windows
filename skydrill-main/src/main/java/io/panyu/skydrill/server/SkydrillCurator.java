@@ -43,7 +43,7 @@ public class SkydrillCurator
             .retryPolicy(new ExponentialBackoffRetry(config.getBaseSleepTime(), config.getMaxRetries()))
     );
 
-    System.setProperty("zookeeper.connect.string", config.getConnectString());
+    System.setProperty("zookeeper.connect-string", config.getConnectString());
     if (config.isZookeeperEnabled() && config.isCoordinator()) {
       log.info("start embedded zookeeper server - for development only");
       new Thread(new EmbeddedZookeeper(config.getZookeeperConfigFile(), new QuorumPeerConfig())).start();

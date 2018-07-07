@@ -48,7 +48,7 @@ public final class JdbcQueryRunner
     public static DistributedQueryRunner createJdbcQueryRunner(Iterable<TpchTable<?>> tables)
             throws Exception
     {
-        System.setProperty("zookeeper.connect.string", "127.0.0.1:2181");
+        System.setProperty("zookeeper.connect-string", "127.0.0.1:2181");
         DistributedQueryRunner queryRunner = null;
         try {
             queryRunner = new DistributedQueryRunner(createSession(), 3);

@@ -16,7 +16,7 @@ public class SqlServerClientConfig
     return authenticationScheme;
   }
 
-  @Config("sqlserver.authentication.scheme")
+  @Config("sqlserver.authentication-scheme")
   public SqlServerClientConfig setAuthenticationScheme(String authenticationScheme) {
     this.authenticationScheme = authenticationScheme;
     return this;
@@ -26,7 +26,7 @@ public class SqlServerClientConfig
     return selectMethod;
   }
 
-  @Config("sqlserver.select.method")
+  @Config("sqlserver.select-method")
   public SqlServerClientConfig setSelectMethod(String selectMethod) {
     this.selectMethod = selectMethod;
     return this;
@@ -36,7 +36,7 @@ public class SqlServerClientConfig
     return fetchSize;
   }
 
-  @Config("sqlserver.fetch.size")
+  @Config("sqlserver.fetch-size")
   public SqlServerClientConfig setFetchSize(int fetchSize) {
     this.fetchSize = fetchSize;
     return this;
@@ -46,7 +46,7 @@ public class SqlServerClientConfig
     return integratedSecurityEnabled;
   }
 
-  @Config("sqlserver.integrated.security")
+  @Config("sqlserver.integrated-security")
   public SqlServerClientConfig setIntegratedSecurityEnabled(boolean enabled){
     this.integratedSecurityEnabled = enabled;
     return this;

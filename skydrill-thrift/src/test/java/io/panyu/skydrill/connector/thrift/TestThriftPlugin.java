@@ -33,7 +33,7 @@ public class TestThriftPlugin
     @Test
     public void testPlugin()
     {
-        System.setProperty("zookeeper.connect.string", "127.0.0.1:2181");
+        System.setProperty("zookeeper.connect-string", "127.0.0.1:2181");
         SkydrillThriftPlugin plugin = loadPlugin(SkydrillThriftPlugin.class);
 
         ConnectorFactory factory = getOnlyElement(plugin.getConnectorFactories());

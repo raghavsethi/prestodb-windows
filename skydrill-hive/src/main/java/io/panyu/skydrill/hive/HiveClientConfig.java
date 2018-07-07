@@ -26,7 +26,7 @@ public class HiveClientConfig
         return adlOAuth2RefeshUrl;
     }
 
-    @Config("adl.oauth2.refresh.url")
+    @Config("adl.oauth2-refresh-url")
     public HiveClientConfig setAdlOAuth2RefeshUrl(String refeshUrl) {
         this.adlOAuth2RefeshUrl = refeshUrl;
         return this;
@@ -36,7 +36,7 @@ public class HiveClientConfig
         return adlOAuth2ClientId;
     }
 
-    @Config("adl.oauth2.client.id")
+    @Config("adl.oauth2-client-id")
     public HiveClientConfig setAdlOAuth2ClientId(String clientId) {
         this.adlOAuth2ClientId = clientId;
         return this;
@@ -46,7 +46,7 @@ public class HiveClientConfig
         return adlOAuth2ClientCredential;
     }
 
-    @Config("adl.oauth2.credential")
+    @Config("adl.oauth2-credential")
     @ConfigSecuritySensitive
     public HiveClientConfig setAdlOAuth2ClientCredential(String clientCredential) {
         this.adlOAuth2ClientCredential = clientCredential;
@@ -58,7 +58,7 @@ public class HiveClientConfig
         return azureBlobAccounts;
     }
 
-    @Config("azure.blob.accounts")
+    @Config("azure-blob.accounts")
     public HiveClientConfig setAzureBlobAccounts(String blobAccounts) {
         this.azureBlobAccounts = (blobAccounts == null)? null : SPLITTER.splitToList(blobAccounts);
         return this;
@@ -69,7 +69,7 @@ public class HiveClientConfig
         return azureBlobAccountKeys;
     }
 
-    @Config("azure.blob.account.keys")
+    @Config("azure-blob.account-keys")
     @ConfigSecuritySensitive
     public HiveClientConfig setAzureBlobAccountKeys(String blobAccountKeys) {
         this.azureBlobAccountKeys = (blobAccountKeys == null)? null : SPLITTER.splitToList(blobAccountKeys);

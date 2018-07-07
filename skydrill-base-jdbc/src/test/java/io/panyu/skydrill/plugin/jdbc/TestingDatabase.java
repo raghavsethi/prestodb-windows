@@ -58,7 +58,7 @@ final class TestingDatabase
             throws Exception
     {
         zk = new TestingServer(2181, true);
-        System.setProperty("zookeeper.connect.string", "127.0.0.1:2181");
+        System.setProperty("zookeeper.connect-string", "127.0.0.1:2181");
         String connectionUrl = "jdbc:h2:mem:test" + System.nanoTime();
         jdbcClient = new BaseJdbcClient(
                 new JdbcConnectorId(CONNECTOR_ID),

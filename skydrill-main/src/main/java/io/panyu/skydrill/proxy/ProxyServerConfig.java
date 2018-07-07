@@ -36,7 +36,7 @@ public class ProxyServerConfig
     return sslEnabled;
   }
 
-  @Config("proxy-server.ssl.enabled")
+  @Config("proxy-server.ssl-enabled")
   public ProxyServerConfig setSslEnabled(boolean enabled) {
     this.sslEnabled = enabled;
     return this;

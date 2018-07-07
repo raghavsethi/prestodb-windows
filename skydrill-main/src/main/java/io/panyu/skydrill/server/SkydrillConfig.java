@@ -61,7 +61,7 @@ public class SkydrillConfig {
     return zookeeperEnabled;
   }
 
-  @Config("zookeeper-server.enabled")
+  @Config("zookeeper.server-enabled")
   public SkydrillConfig setZookeeperEnabled(boolean embedZookeeper) {
     this.zookeeperEnabled = embedZookeeper;
     return this;
@@ -71,7 +71,7 @@ public class SkydrillConfig {
     return zookeeperConfig;
   }
 
-  @Config("zookeeper.config.file")
+  @Config("zookeeper.config-file")
   public SkydrillConfig setZookeeperConfigFile(String zookeeperConfig) {
     this.zookeeperConfig = zookeeperConfig;
     return this;
@@ -81,7 +81,7 @@ public class SkydrillConfig {
     return connectString;
   }
 
-  @Config("zookeeper.connect.string")
+  @Config("zookeeper.connect-string")
   public SkydrillConfig setConnectString(String connectString) {
     this.connectString = connectString;
     return this;
@@ -91,7 +91,7 @@ public class SkydrillConfig {
     return sessionTimeoutMs;
   }
 
-  @Config("zookeeper.session.timeout")
+  @Config("zookeeper.session-timeout")
   public SkydrillConfig setSessionTimeoutMs(int sessionTimeout){
     this.sessionTimeoutMs = sessionTimeout;
     return this;
@@ -101,7 +101,7 @@ public class SkydrillConfig {
     return connectionTimeoutMs;
   }
 
-  @Config("zookeeper.connection.timeout")
+  @Config("zookeeper.connection-timeout")
   public SkydrillConfig setConnectionTimeoutMs(int connectionTimeout) {
     this.connectionTimeoutMs = connectionTimeout;
     return this;
@@ -111,7 +111,7 @@ public class SkydrillConfig {
     return baseSleepTime;
   }
 
-  @Config("curator.retry.sleeptime")
+  @Config("curator.retry-sleeptime")
   public SkydrillConfig setBaseSleepTime(int baseSleepTime) {
     this.baseSleepTime = baseSleepTime;
     return this;
@@ -121,7 +121,7 @@ public class SkydrillConfig {
     return maxRetries;
   }
 
-  @Config("curator.retry.maxretries")
+  @Config("curator.retry-maxretries")
   public SkydrillConfig setMaxRetries(int maxRetries) {
     this.maxRetries = maxRetries;
     return this;
@@ -131,7 +131,7 @@ public class SkydrillConfig {
     return maxWaitTime;
   }
 
-  @Config("curator.initialize.waittime")
+  @Config("curator.initialize-waittime")
   public SkydrillConfig setMaxWaitTime(int maxWaitTime) {
     this.maxWaitTime = maxWaitTime;
     return this;

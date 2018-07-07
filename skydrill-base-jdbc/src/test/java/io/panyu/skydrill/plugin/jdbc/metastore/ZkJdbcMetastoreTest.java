@@ -32,7 +32,7 @@ public class ZkJdbcMetastoreTest {
             throws Exception
     {
         zk = new TestingServer(2181, true);
-        System.setProperty("zookeeper.connect.string", "127.0.0.1:2181");
+        System.setProperty("zookeeper.connect-string", "127.0.0.1:2181");
         metastore = new ZkJdbcMetastore(new JdbcConnectorId("test"), new ZkJdbcMetastoreConfig());
         viewName = new SchemaTableName("testschema", "testview");
         viewCodec = jsonCodecFactory.jsonCodec(ViewDefinition.class);

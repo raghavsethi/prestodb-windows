@@ -30,7 +30,7 @@ public class LeaderElectionConfig
     return leaderElectionPath;
   }
 
-  @Config("leader.election.coordinator.path")
+  @Config("leader-election.coordinator-path")
   public LeaderElectionConfig setLeaderElectionPath(String leaderElectionPath) {
     this.leaderElectionPath = leaderElectionPath;
     return this;
@@ -40,7 +40,7 @@ public class LeaderElectionConfig
     return workerRuntimPath;
   }
 
-  @Config("worker.runtime.path")
+  @Config("worker.runtime-path")
   public LeaderElectionConfig setWorkerRuntimePath(String workerRuntimePath) {
     this.workerRuntimPath = workerRuntimePath;
     return this;
@@ -50,7 +50,7 @@ public class LeaderElectionConfig
     return pullingInterval;
   }
 
-  @Config("leader.election.pulling.interval")
+  @Config("leader-election.pulling-interval")
   public LeaderElectionConfig setPullingInterval(int pullingInterval) {
     this.pullingInterval = pullingInterval;
     return this;

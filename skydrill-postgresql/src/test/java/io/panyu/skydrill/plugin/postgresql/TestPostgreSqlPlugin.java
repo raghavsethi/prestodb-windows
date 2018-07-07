@@ -26,7 +26,7 @@ public class TestPostgreSqlPlugin
     @Test
     public void testCreateConnector()
     {
-        System.setProperty("zookeeper.connect.string", "127.0.0.1:2181");
+        System.setProperty("zookeeper.connect-string", "127.0.0.1:2181");
         Plugin plugin = new PostgreSqlPlugin();
         ConnectorFactory factory = getOnlyElement(plugin.getConnectorFactories());
         factory.create("test",

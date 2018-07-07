@@ -21,7 +21,7 @@ public class TestJdbcConnectorFactory
     @Test
     public void test()
     {
-        System.setProperty("zookeeper.connect.string", "127.0.0.1:2181");
+        System.setProperty("zookeeper.connect-string", "127.0.0.1:2181");
         JdbcConnectorFactory connectorFactory = new JdbcConnectorFactory(
                 "test",
                 new TestingH2JdbcModule(),
