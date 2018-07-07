@@ -5,11 +5,15 @@ import com.facebook.presto.plugin.jdbc.JdbcConnectorId;
 import com.facebook.presto.spi.ConnectorViewDefinition;
 import com.facebook.presto.spi.SchemaTableName;
 import com.facebook.presto.spi.SchemaTablePrefix;
+import com.facebook.presto.spi.type.Type;
+import com.facebook.presto.type.TypeDeserializer;
+import com.facebook.presto.type.TypeRegistry;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import io.airlift.json.JsonCodec;
 import io.airlift.json.JsonCodecFactory;
+import io.airlift.json.ObjectMapperProvider;
 import io.airlift.log.Logger;
 import org.apache.curator.RetryPolicy;
 import org.apache.curator.framework.CuratorFramework;
@@ -33,7 +37,6 @@ public class ZkJdbcMetastore
 {
   private static final Logger log = Logger.get(ZkJdbcMetastore.class);
   private static final Splitter nsSplitter = Splitter.on('.').trimResults().omitEmptyStrings();
-  private static final JsonCodecFactory jsonCodecFactory = new JsonCodecFactory();
 
   private final JdbcConnectorId connectorId;
   private final String viewRootPath;
@@ -45,7 +48,10 @@ public class ZkJdbcMetastore
                          ZkJdbcMetastoreConfig config) {
     this.connectorId = connectorId;
     this.viewRootPath = String.format("%s/%s", config.getViewRootPath(), connectorId);
-    this.viewCodec = jsonCodecFactory.jsonCodec(ViewDefinition.class);
+
+    ObjectMapperProvider provider = new ObjectMapperProvider();
+    provider.setJsonDeserializers(ImmutableMap.of(Type.class, new TypeDeserializer(new TypeRegistry())));
+    viewCodec = new JsonCodecFactory(provider).jsonCodec(ViewDefinition.class);
 
     RetryPolicy retry = new ExponentialBackoffRetry(1000, 5);
     curator = CuratorFrameworkFactory.newClient(config.getConnectString(), retry);
@@ -54,6 +60,10 @@ public class ZkJdbcMetastore
   public CuratorFramework getCurator() throws Exception {
     checkAndStartCurator();
     return curator;
+  }
+
+  public JsonCodec<ViewDefinition> getViewCodec() {
+    return viewCodec;
   }
 
   @Override
