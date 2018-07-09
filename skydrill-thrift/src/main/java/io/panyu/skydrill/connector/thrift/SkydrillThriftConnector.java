@@ -7,26 +7,31 @@ import com.facebook.presto.connector.thrift.ThriftSessionProperties;
 import com.facebook.presto.spi.connector.ConnectorMetadata;
 import com.facebook.presto.spi.connector.ConnectorSplitManager;
 import com.facebook.presto.spi.connector.ConnectorTransactionHandle;
+import com.facebook.presto.spi.session.PropertyMetadata;
 import io.airlift.bootstrap.LifeCycleManager;
 
 import javax.inject.Inject;
+import java.util.List;
 
 public class SkydrillThriftConnector
         extends ThriftConnector
 {
     private final SkydrillThriftMetadata metadata;
     private final SkydrillThriftSplitManager splitManager;
+    private final SkydrillThriftSessionProperties sessionProperties;
 
     @Inject
     public SkydrillThriftConnector(LifeCycleManager lifeCycleManager,
                                    SkydrillThriftMetadata metadata,
                                    SkydrillThriftSplitManager splitManager,
                                    ThriftPageSourceProvider pageSourceProvider,
-                                   ThriftSessionProperties sessionProperties,
+                                   ThriftSessionProperties properties,
+                                   SkydrillThriftSessionProperties sessionProperties,
                                    ThriftIndexProvider indexProvider) {
-        super(lifeCycleManager, metadata, splitManager, pageSourceProvider, sessionProperties, indexProvider);
+        super(lifeCycleManager, metadata, splitManager, pageSourceProvider, properties, indexProvider);
         this.metadata = metadata;
         this.splitManager = splitManager;
+        this.sessionProperties = sessionProperties;
     }
 
     @Override
@@ -39,6 +44,12 @@ public class SkydrillThriftConnector
     public ConnectorSplitManager getSplitManager()
     {
         return splitManager;
+    }
+
+    @Override
+    public List<PropertyMetadata<?>> getSessionProperties()
+    {
+        return sessionProperties.getSessionProperties();
     }
 
 }

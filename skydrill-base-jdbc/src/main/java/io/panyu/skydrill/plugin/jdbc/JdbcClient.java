@@ -13,6 +13,7 @@
  */
 package io.panyu.skydrill.plugin.jdbc;
 
+import com.facebook.presto.plugin.jdbc.JdbcTableHandle;
 import com.facebook.presto.spi.ConnectorSession;
 import com.facebook.presto.spi.ConnectorViewDefinition;
 import com.facebook.presto.spi.SchemaTableName;
@@ -20,12 +21,16 @@ import com.facebook.presto.spi.SchemaTablePrefix;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
 
 public interface JdbcClient
     extends com.facebook.presto.plugin.jdbc.JdbcClient
 {
+    List<SchemaTableName> getTableNames(ConnectorSession session, @Nullable String schema);
+    JdbcTableHandle getTableHandle(ConnectorSession session, SchemaTableName tableName);
+
     default void createView(ConnectorSession session, SchemaTableName viewName, String viewData, boolean replace) {
     }
 

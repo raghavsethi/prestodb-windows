@@ -32,14 +32,15 @@ import static com.facebook.presto.spi.StandardErrorCode.PERMISSION_DENIED;
 import static com.facebook.presto.spi.type.BigintType.BIGINT;
 import static com.facebook.presto.spi.type.VarcharType.VARCHAR;
 import static com.facebook.presto.spi.type.VarcharType.createVarcharType;
-import static com.facebook.presto.testing.TestingConnectorSession.SESSION;
 import static io.panyu.skydrill.plugin.jdbc.TestingDatabase.CONNECTOR_ID;
 import static io.panyu.skydrill.plugin.jdbc.TestingJdbcTypeHandle.JDBC_BIGINT;
 import static io.panyu.skydrill.plugin.jdbc.TestingJdbcTypeHandle.JDBC_VARCHAR;
+import static io.panyu.skydrill.plugin.jdbc.TestingSession.SESSION;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
+
 
 @Test(singleThreaded = true)
 public class TestJdbcMetadata

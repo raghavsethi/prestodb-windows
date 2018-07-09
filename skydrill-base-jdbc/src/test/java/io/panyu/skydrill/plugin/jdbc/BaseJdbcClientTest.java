@@ -11,11 +11,10 @@ import org.testng.annotations.Test;
 import java.util.List;
 import java.util.Map;
 
-import static com.facebook.presto.testing.TestingSession.testSessionBuilder;
 import static org.testng.Assert.assertEquals;
 
 public class BaseJdbcClientTest {
-    private static final ConnectorSession session = testSessionBuilder().build().toConnectorSession();
+    private final ConnectorSession session = TestingSession.SESSION;
 
     private TestingDatabase database;
     private String catalogName;
@@ -44,7 +43,7 @@ public class BaseJdbcClientTest {
         assertEquals(example.size(), 3);
         jdbcClient.createView(session, fooView, "foobar", true);
         example = jdbcClient.getTableNames("example");
-        assertEquals(example.size(), 4);
+        assertEquals(example.size(), 3);
     }
 
     @Test

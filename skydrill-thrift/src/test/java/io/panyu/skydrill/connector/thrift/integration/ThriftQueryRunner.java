@@ -40,6 +40,7 @@ import io.airlift.drift.transport.netty.server.DriftNettyServerTransport;
 import io.airlift.drift.transport.netty.server.DriftNettyServerTransportFactory;
 import io.airlift.log.Logger;
 import io.airlift.log.Logging;
+import io.panyu.skydrill.connector.thrift.SkydrillThriftPlugin;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -125,7 +126,7 @@ public final class ThriftQueryRunner
                 .setExtraProperties(properties)
                 .build();
 
-        queryRunner.installPlugin(new ThriftPlugin());
+        queryRunner.installPlugin(new SkydrillThriftPlugin());
         Map<String, String> connectorProperties = ImmutableMap.<String, String>builder()
                 .put("presto.thrift.client.addresses", addresses)
                 .put("presto.thrift.client.connect-timeout", "30s")

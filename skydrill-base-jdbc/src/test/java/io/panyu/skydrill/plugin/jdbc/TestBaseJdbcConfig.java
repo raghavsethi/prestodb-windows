@@ -13,38 +13,31 @@
  */
 package io.panyu.skydrill.plugin.jdbc;
 
-import com.google.common.collect.ImmutableMap;
-import io.airlift.configuration.testing.ConfigAssertions;
 import org.testng.annotations.Test;
 
-import java.util.Map;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
 
 public class TestBaseJdbcConfig
 {
     @Test
     public void testDefaults()
     {
-        ConfigAssertions.assertRecordedDefaults(ConfigAssertions.recordDefaults(BaseJdbcConfig.class)
-                .setConnectionUrl(null)
-                .setConnectionUser(null)
-                .setConnectionPassword(null)
-        );
+        BaseJdbcConfig config = new BaseJdbcConfig();
+        assertFalse(config.isViewPushdownEnabled());
     }
 
     @Test
     public void testExplicitPropertyMappings()
     {
-        Map<String, String> properties = new ImmutableMap.Builder<String, String>()
-                .put("connection-url", "jdbc:h2:mem:config")
-                .put("connection-user", "user")
-                .put("connection-password", "password")
-                .build();
+        BaseJdbcConfig config = new BaseJdbcConfig()
+                .setViewPushdownEnabled(true);
+        config.setConnectionUrl("jdbc:h2:mem:config");
+        config.setConnectionUser("user");
+        config.setConnectionPassword("password");
 
-        BaseJdbcConfig expected = (BaseJdbcConfig) new BaseJdbcConfig()
-                .setConnectionUrl("jdbc:h2:mem:config")
-                .setConnectionUser("user")
-                .setConnectionPassword("password");
-
-        ConfigAssertions.assertFullMapping(properties, expected);
+        assertTrue(config.isViewPushdownEnabled());
+        assertEquals(config.getConnectionUrl(), "jdbc:h2:mem:config");
     }
 }

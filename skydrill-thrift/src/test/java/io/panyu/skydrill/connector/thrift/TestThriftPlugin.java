@@ -13,16 +13,12 @@
  */
 package io.panyu.skydrill.connector.thrift;
 
-import com.facebook.presto.connector.thrift.ThriftConnector;
 import com.facebook.presto.spi.Plugin;
 import com.facebook.presto.spi.connector.Connector;
 import com.facebook.presto.spi.connector.ConnectorFactory;
 import com.facebook.presto.testing.TestingConnectorContext;
 import com.google.common.collect.ImmutableMap;
 import org.testng.annotations.Test;
-
-import java.util.Map;
-import java.util.ServiceLoader;
 
 import static com.google.common.collect.Iterables.getOnlyElement;
 import static io.airlift.testing.Assertions.assertInstanceOf;
@@ -34,26 +30,12 @@ public class TestThriftPlugin
     public void testPlugin()
     {
         System.setProperty("zookeeper.connect-string", "127.0.0.1:2181");
-        SkydrillThriftPlugin plugin = loadPlugin(SkydrillThriftPlugin.class);
-
+        Plugin plugin = new SkydrillThriftPlugin();
         ConnectorFactory factory = getOnlyElement(plugin.getConnectorFactories());
-        assertInstanceOf(factory, ThriftConnectorFactory.class);
-
-        Map<String, String> config = ImmutableMap.of("presto.thrift.client.addresses", "localhost:7779");
-
-        Connector connector = factory.create("test", config, new TestingConnectorContext());
+        Connector connector = factory.create("test",
+                ImmutableMap.of("presto.thrift.client.addresses", "localhost:7779"),
+                new TestingConnectorContext());
         assertNotNull(connector);
-        assertInstanceOf(connector, ThriftConnector.class);
-    }
-
-    @SuppressWarnings("unchecked")
-    private static <T extends Plugin> T loadPlugin(Class<T> clazz)
-    {
-        for (Plugin plugin : ServiceLoader.load(Plugin.class)) {
-            if (clazz.isInstance(plugin)) {
-                return (T) plugin;
-            }
-        }
-        throw new AssertionError("did not find plugin: " + clazz.getName());
+        assertInstanceOf(connector, SkydrillThriftConnector.class);
     }
 }

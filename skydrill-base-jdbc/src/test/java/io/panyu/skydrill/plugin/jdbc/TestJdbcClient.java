@@ -28,7 +28,6 @@ import static com.facebook.presto.spi.type.DoubleType.DOUBLE;
 import static com.facebook.presto.spi.type.RealType.REAL;
 import static com.facebook.presto.spi.type.VarcharType.VARCHAR;
 import static com.facebook.presto.spi.type.VarcharType.createVarcharType;
-import static com.facebook.presto.testing.TestingSession.testSessionBuilder;
 import static io.panyu.skydrill.plugin.jdbc.TestingDatabase.CONNECTOR_ID;
 import static io.panyu.skydrill.plugin.jdbc.TestingJdbcTypeHandle.JDBC_BIGINT;
 import static io.panyu.skydrill.plugin.jdbc.TestingJdbcTypeHandle.JDBC_DOUBLE;
@@ -42,7 +41,7 @@ import static org.testng.Assert.assertTrue;
 @Test
 public class TestJdbcClient
 {
-    private static final ConnectorSession session = testSessionBuilder().build().toConnectorSession();
+    private static final ConnectorSession session = TestingSession.SESSION;
 
     private TestingDatabase database;
     private String catalogName;

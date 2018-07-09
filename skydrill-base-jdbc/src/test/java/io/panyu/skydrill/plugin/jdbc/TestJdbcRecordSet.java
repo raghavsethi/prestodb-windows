@@ -31,7 +31,6 @@ import java.util.Map;
 import static com.facebook.presto.spi.type.BigintType.BIGINT;
 import static com.facebook.presto.spi.type.VarcharType.VARCHAR;
 import static com.facebook.presto.spi.type.VarcharType.createVarcharType;
-import static com.facebook.presto.testing.TestingSession.testSessionBuilder;
 import static io.panyu.skydrill.plugin.jdbc.TestingJdbcTypeHandle.JDBC_BIGINT;
 import static io.panyu.skydrill.plugin.jdbc.TestingJdbcTypeHandle.JDBC_VARCHAR;
 import static org.testng.Assert.assertEquals;
@@ -40,7 +39,7 @@ import static org.testng.Assert.assertFalse;
 @Test
 public class TestJdbcRecordSet
 {
-    private static final ConnectorSession session = testSessionBuilder().build().toConnectorSession();
+    private static final ConnectorSession session = TestingSession.SESSION;
 
     private TestingDatabase database;
     private JdbcClient jdbcClient;

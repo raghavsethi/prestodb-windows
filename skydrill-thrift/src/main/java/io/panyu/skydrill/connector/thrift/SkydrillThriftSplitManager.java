@@ -41,8 +41,8 @@ public class SkydrillThriftSplitManager
                                           ConnectorSession session,
                                           ConnectorTableLayoutHandle layout,
                                           SplitSchedulingStrategy splitSchedulingStrategy) {
-        ConnectorTableLayoutHandle layoutHandle = getTableLayoutHandle(layout);
-        return super.getSplits(transactionHandle, session, layoutHandle, splitSchedulingStrategy);
+        //ConnectorTableLayoutHandle layoutHandle = getTableLayoutHandle(layout);
+        return super.getSplits(transactionHandle, session, layout, splitSchedulingStrategy);
     }
 
     private ConnectorTableLayoutHandle getTableLayoutHandle(ConnectorTableLayoutHandle layoutHandle) {

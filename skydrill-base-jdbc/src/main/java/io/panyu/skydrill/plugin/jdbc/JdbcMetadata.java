@@ -1,5 +1,6 @@
 package io.panyu.skydrill.plugin.jdbc;
 
+import com.facebook.presto.plugin.jdbc.JdbcTableHandle;
 import com.facebook.presto.spi.ConnectorSession;
 import com.facebook.presto.spi.ConnectorViewDefinition;
 import com.facebook.presto.spi.SchemaTableName;
@@ -15,6 +16,16 @@ public class JdbcMetadata
   public JdbcMetadata(JdbcClient jdbcClient, boolean allowDropTable) {
     super(jdbcClient, allowDropTable);
     this.jdbcClient = jdbcClient;
+  }
+
+  @Override
+  public List<SchemaTableName> listTables(ConnectorSession session, String schemaNameOrNull) {
+    return jdbcClient.getTableNames(session, schemaNameOrNull);
+  }
+
+  @Override
+  public JdbcTableHandle getTableHandle(ConnectorSession session, SchemaTableName tableName) {
+    return jdbcClient.getTableHandle(session, tableName);
   }
 
   @Override

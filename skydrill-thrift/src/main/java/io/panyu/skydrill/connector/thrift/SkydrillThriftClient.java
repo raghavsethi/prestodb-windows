@@ -71,7 +71,7 @@ public class SkydrillThriftClient
         return metastore.getViewData(viewName);
     }
 
-    private ViewDefinition getViewDefinition(SchemaTableName viewName) {
+    protected ViewDefinition getViewDefinition(SchemaTableName viewName) {
         return metastore.getViewDefinition(viewName);
     }
 

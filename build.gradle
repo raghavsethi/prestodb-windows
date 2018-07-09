@@ -24,7 +24,7 @@ task makeTarget {
   doLast {
     def targetPath = "target"
     def prestoTarget = targetPath + "/presto-server-${prestoVersion}"
-    def jdbcDependencies = ['skydrill*', 'curator*', 'zookeeper*', 'json*', 'jackson*', 'presto-main*']
+    def jdbcDependencies = ['skydrill*', 'curator*', 'zookeeper*', 'json*', 'jackson*', 'presto-main*', 'joni*']
 
     delete targetPath
     copy { from tarTree(resources.gzip(configurations.deploy.find {it.name.contains("presto-server-${prestoVersion}")}))
@@ -49,7 +49,8 @@ task makeTarget {
     // update thrift plugin
     copy { from 'skydrill-thrift/build/libs'
       into prestoTarget + '/plugin/presto-thrift'
-      include 'skydrill*', 'curator*', 'zookeeper*', 'json*', 'jackson*', 'presto-main*' }
+      include 'skydrill*', 'curator*', 'zookeeper*', 'json*', 'jackson*', 'joda*', 'joni*',
+              'presto-main*', 'presto-base*' }
 
     // update postgresql plugin
     copy { from 'skydrill-postgresql/build/libs'

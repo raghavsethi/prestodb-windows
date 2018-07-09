@@ -141,7 +141,6 @@ public class QueryBuilder
             sql.append("(");
             sql.append(getViewSql(viewDefinition.get()));
             sql.append(") ");
-            sql.append(table);
         } else {
             if (!isNullOrEmpty(catalog)) {
                 sql.append(quote(catalog)).append('.');
