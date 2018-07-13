@@ -22,6 +22,7 @@ import org.apache.zookeeper.Watcher;
 
 import javax.inject.Inject;
 import java.net.URI;
+import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -39,6 +40,7 @@ public class LeaderElectionWatcher
   private final LeaderElectionConfig config;
   private final CuratorFramework curator;
   private final String leaderElectionPath;
+  private final ScheduledExecutorService executor;
   
   private URI coordinatorUri;
 
@@ -47,27 +49,28 @@ public class LeaderElectionWatcher
     this.config = requireNonNull(config, "config is null");
     this.curator = requireNonNull(curator, "curator is null");
     this.leaderElectionPath = requireNonNull(config.getLeaderElectionPath());
+    this.executor = Executors.newScheduledThreadPool(1, daemonThreadsNamed("coordinator-watcher"));
 
     try {
       coordinatorUri = requireNonNull(config.getLocalCoordinatorURI());
+      if (curator.checkExists().forPath(leaderElectionPath) == null) {
+        curator.create().creatingParentContainersIfNeeded().forPath(leaderElectionPath);
+      }
     } catch (Exception e) {
       log.error(e);
     }
   }
 
-  public void start() {
-    try {
-      if (curator.checkExists().forPath(leaderElectionPath) == null) {
-        curator.create().creatingParentContainersIfNeeded().forPath(leaderElectionPath);
+  public void start() throws Exception {
+    curator.getData().usingWatcher(this).forPath(leaderElectionPath);
+    executor.scheduleWithFixedDelay(() -> {
+      try {
+        updateLeaderCoordinatorURI();
+      } catch (Exception e) {
+        log.error(e);
       }
-      curator.getData().usingWatcher(this).forPath(leaderElectionPath);
-    } catch (Exception e) {
-      log.error(e);
-    }
-
-    ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1, daemonThreadsNamed("coordinator-watcher"));
-    scheduler.scheduleWithFixedDelay(this::refreshCoordinatorUri, 0, config.getPullingInterval(), TimeUnit.SECONDS);
-    Runtime.getRuntime().addShutdownHook(new Thread(scheduler::shutdown));
+    }, 0, config.getPullingInterval(), TimeUnit.SECONDS);
+    Runtime.getRuntime().addShutdownHook(new Thread(executor::shutdown));
   }
 
   public URI getCoordinatorURI() {
@@ -76,27 +79,20 @@ public class LeaderElectionWatcher
 
   @Override
   public void process(WatchedEvent event) throws Exception {
-    Watcher.Event.EventType eventType = event.getType();
-    switch (eventType){
-      case NodeDataChanged:
-      case NodeChildrenChanged:
-        refreshCoordinatorUri();
-        break;
-      default:
-        break;
-    }
     curator.getData().usingWatcher(this).forPath(leaderElectionPath);
+    if (event.getType() == Watcher.Event.EventType.NodeDataChanged) {
+      updateLeaderCoordinatorURI();
+    }
   }
 
-  private void refreshCoordinatorUri() {
-    try {
-      String coordinatorUriString = new String(curator.getData().forPath(config.getLeaderElectionPath()), Charsets.UTF_8);
-      setCoordinatorServiceUri(coordinatorUriString);
-      setDiscoveryServiceUri(coordinatorUriString);
-      coordinatorUri = new URI(coordinatorUriString);
+  private void updateLeaderCoordinatorURI() throws Exception {
+    Optional<byte[]> bytes = Optional.ofNullable(curator.getData().forPath(config.getLeaderElectionPath()));
+    bytes.ifPresent(x -> {
+      String uri = new String(x, Charsets.UTF_8);
+      setCoordinatorServiceUri(uri);
+      setDiscoveryServiceUri(uri);
+      coordinatorUri = URI.create(uri);
       log.info("lead coordinator is: " + coordinatorUri);
-    } catch (Exception e) {
-      log.error(e);
-    }
+    });
   }
 }

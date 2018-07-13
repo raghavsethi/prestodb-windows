@@ -16,25 +16,31 @@ package io.panyu.skydrill.election;
 import com.google.common.base.Charsets;
 import io.airlift.log.Logger;
 import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.recipes.leader.CancelLeadershipException;
+import org.apache.curator.framework.api.CuratorWatcher;
 import org.apache.curator.framework.recipes.leader.LeaderSelector;
 import org.apache.curator.framework.recipes.leader.LeaderSelectorListener;
 import org.apache.curator.framework.state.ConnectionState;
+import org.apache.zookeeper.WatchedEvent;
+import org.apache.zookeeper.Watcher;
 
 import javax.inject.Inject;
 import java.net.URI;
+import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import static io.panyu.skydrill.server.SkydrillConfig.setCoordinatorServiceUri;
 import static io.panyu.skydrill.server.SkydrillConfig.setDiscoveryServiceUri;
 import static java.util.Objects.requireNonNull;
 
 public class LeaderElection
-        implements LeaderSelectorListener
+        implements LeaderSelectorListener, CuratorWatcher
 {
   private static final Logger log = Logger.get(LeaderElection.class);
+  private static final int electionCountDownSecond = 2;
 
   private final CountDownLatch exitCountDownLatch = new CountDownLatch(1);
+  private final CountDownLatch electionCountDown = new CountDownLatch(1);
   private final LeaderElectionConfig config;
   private final CuratorFramework curator;
   private final LeaderSelector leaderSelector;
@@ -57,8 +63,14 @@ public class LeaderElection
     }
   }
 
-  public void start() {
+  public void start() throws Exception {
     leaderSelector.start();
+    electionCountDown.await(electionCountDownSecond, TimeUnit.SECONDS);
+
+    if (!leaderSelector.hasLeadership()) {
+      updateLeaderCoordinatorURI();
+      curator.checkExists().usingWatcher(this).forPath(config.getLeaderElectionPath());
+    }
 
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
       System.out.println("Shutting down...");
@@ -72,6 +84,7 @@ public class LeaderElection
 
     setLeaderCoordinatorURI(config.getLocalCoordinatorURI().toString());
     setDiscoveryServiceUri(config.getLocalCoordinatorURI().toString());
+    electionCountDown.countDown();
     exitCountDownLatch.await();
     log.info("relinquished leadership");
   }
@@ -81,12 +94,22 @@ public class LeaderElection
     switch (newState) {
       case LOST:
         log.error("zookeeper connection lost");
-        throw new CancelLeadershipException();
+        executeFailFast();
+        break;
       case SUSPENDED:
         log.warn("zookeeper connection suspended");
-        throw new CancelLeadershipException();
+        executeFailFast();
+        break;
       default:
         log.info("zookeeper connection state changed: " + newState);
+    }
+  }
+
+  @Override
+  public void process(WatchedEvent event) throws Exception {
+    curator.checkExists().usingWatcher(this).forPath(config.getLeaderElectionPath());
+    if (event.getType() == Watcher.Event.EventType.NodeDataChanged) {
+      updateLeaderCoordinatorURI();
     }
   }
 
@@ -115,4 +138,12 @@ public class LeaderElection
     log.info(String.format("lead coordinator is %s", coordinatorURI));
   }
 
+  private void updateLeaderCoordinatorURI() throws Exception {
+    Optional<byte[]> bytes = Optional.ofNullable(curator.getData().forPath(config.getLeaderElectionPath()));
+    bytes.ifPresent(x -> setCoordinatorServiceUri(new String(x, Charsets.UTF_8)));
+  }
+
+  private void executeFailFast() {
+    Runtime.getRuntime().exit(1);
+  }
 }
