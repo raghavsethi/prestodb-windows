@@ -7,6 +7,7 @@ import com.facebook.presto.spi.SchemaTablePrefix;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public interface JdbcMetastore extends Cloneable {
   void createView(SchemaTableName viewName, String viewData, boolean replace);
@@ -17,7 +18,7 @@ public interface JdbcMetastore extends Cloneable {
 
   Map<SchemaTableName, ConnectorViewDefinition> getViews(SchemaTablePrefix prefix);
 
-  String getViewData(SchemaTableName viewName);
+  Optional<String> getViewData(SchemaTableName viewName);
 
-  ViewDefinition getViewDefinition(SchemaTableName viewName);
+  Optional<ViewDefinition> getViewDefinition(SchemaTableName viewName);
 }

@@ -20,6 +20,7 @@ import io.airlift.drift.client.DriftClient;
 import javax.inject.Inject;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 
 import static java.util.Objects.requireNonNull;
 
@@ -41,7 +42,7 @@ public class SkydrillThriftSplitManager
                                           ConnectorSession session,
                                           ConnectorTableLayoutHandle layout,
                                           SplitSchedulingStrategy splitSchedulingStrategy) {
-        //ConnectorTableLayoutHandle layoutHandle = getTableLayoutHandle(layout);
+        ConnectorTableLayoutHandle layoutHandle = getTableLayoutHandle(layout);
         return super.getSplits(transactionHandle, session, layout, splitSchedulingStrategy);
     }
 
@@ -50,13 +51,15 @@ public class SkydrillThriftSplitManager
         Map<ColumnHandle, Domain> domains = layout.getConstraint().getDomains().orElse(Collections.emptyMap());
 
         SchemaTableName table = new SchemaTableName(layout.getSchemaName(), layout.getTableName());
-        String viewData =  client.getViewData(table);
-        Type viewDataType = VarcharType.createVarcharType(viewData.length());
-        domains.put(new ThriftColumnHandle("$view", viewDataType, null, true),
-                    Domain.singleValue(viewDataType,viewData));
+        Optional<String> viewData = client.getViewData(table);
+        if (viewData.isPresent()) {
+            Type viewDataType = VarcharType.createVarcharType(viewData.get().length());
+            domains.put(new ThriftColumnHandle("$view", viewDataType, null, true),
+                    Domain.singleValue(viewDataType, viewData.get()));
+        }
 
         return new ThriftTableLayoutHandle(layout.getSchemaName(),
-                layout.getSchemaName(),
+                layout.getTableName(),
                 layout.getColumns(),
                 TupleDomain.withColumnDomains(domains));
     }

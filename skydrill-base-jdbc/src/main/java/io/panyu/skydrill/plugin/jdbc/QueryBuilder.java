@@ -122,8 +122,8 @@ public class QueryBuilder
             throws SQLException
     {
         StringBuilder sql = new StringBuilder();
-        Optional<ViewDefinition> viewDefinition = Optional.ofNullable(metastore)
-                .map(x -> x.getViewDefinition(new SchemaTableName(schema, table)));
+        Optional<ViewDefinition> viewDefinition = isNullOrEmpty(schema)? Optional.empty() :
+                metastore.getViewDefinition(new SchemaTableName(schema, table));
 
         String columnNames = columns.stream()
                 .map(JdbcColumnHandle::getColumnName)

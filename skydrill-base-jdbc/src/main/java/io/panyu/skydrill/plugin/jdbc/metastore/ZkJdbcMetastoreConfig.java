@@ -5,7 +5,7 @@ import io.airlift.configuration.Config;
 public class ZkJdbcMetastoreConfig
 {
   private String connectString = System.getProperty("zookeeper.connect-string");
-  private String viewRootPath = "/skydrill/views";
+  private String catalogRootPath = "/skydrill/catalogs";
 
   public String getConnectString() {
     return connectString;
@@ -17,13 +17,13 @@ public class ZkJdbcMetastoreConfig
     return this;
   }
 
-  public String getViewRootPath() {
-    return viewRootPath;
+  public String getCatalogRootPath() {
+    return catalogRootPath;
   }
 
-  @Config("skydrill.view-root-path")
-  public ZkJdbcMetastoreConfig setViewRootPath(String rootPath) {
-    this.viewRootPath = rootPath;
+  @Config("catalog.root-path")
+  public ZkJdbcMetastoreConfig setCatalogRootPath(String rootPath) {
+    this.catalogRootPath = rootPath;
     return this;
   }
 }

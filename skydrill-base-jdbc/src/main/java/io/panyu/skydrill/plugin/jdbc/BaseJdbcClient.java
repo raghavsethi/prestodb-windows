@@ -58,8 +58,13 @@ public class BaseJdbcClient
   }
 
   @Override
+  public List<SchemaTableName> getTableNames(@Nullable String schema) {
+    return getTableNames(null, schema);
+  }
+
+  @Override
   public List<SchemaTableName> getTableNames(ConnectorSession session, @Nullable String schema) {
-    if (isViewPushdownEnabled(session)) {
+    if ((session != null) && isViewPushdownEnabled(session)) {
       List<SchemaTableName> names = new ArrayList<>();
       names.addAll(listViews(null, schema));
       names.addAll(super.getTableNames(schema));
@@ -70,9 +75,15 @@ public class BaseJdbcClient
 
   @Nullable
   @Override
+  public JdbcTableHandle getTableHandle(SchemaTableName schemaTableName) {
+    return getTableHandle(null, schemaTableName);
+  }
+
+  @Nullable
+  @Override
   public JdbcTableHandle getTableHandle(ConnectorSession session, SchemaTableName schemaTableName) {
-    if (isViewPushdownEnabled(session)) {
-      Optional<String> viewData = Optional.ofNullable(metastore.getViewData(schemaTableName));
+    if ((session != null) && isViewPushdownEnabled(session)) {
+      Optional<String> viewData = metastore.getViewData(schemaTableName);
       if (viewData.isPresent()) {
         return new JdbcTableHandle(
                 connectorId,
@@ -88,7 +99,7 @@ public class BaseJdbcClient
   @Override
   public List<JdbcColumnHandle> getColumns(ConnectorSession session, JdbcTableHandle tableHandle) {
     if (isViewPushdownEnabled(session)) {
-      Optional<ViewDefinition> viewDefinition = Optional.ofNullable(metastore.getViewDefinition(tableHandle.getSchemaTableName()));
+      Optional<ViewDefinition> viewDefinition = metastore.getViewDefinition(tableHandle.getSchemaTableName());
       if (viewDefinition.isPresent()) {
         return viewDefinition.get().getColumns().stream()
                 .map(y -> makeJdbcColumnHandle(connectorId, y))
@@ -147,10 +158,9 @@ public class BaseJdbcClient
     for (SchemaTableName schemaTableName : tableNames) {
       JdbcTableHandle tableHandle = getTableHandle(schemaTableName);
       if (tableHandle == null) {
-        views.put(schemaTableName, new ConnectorViewDefinition(
-                schemaTableName,
-                Optional.empty(),
-                metastore.getViewData(schemaTableName)));
+        metastore.getViewData(schemaTableName).ifPresent(s ->
+          views.put(schemaTableName, new ConnectorViewDefinition(schemaTableName, Optional.empty(), s))
+        );
       }
     }
     return views.build();

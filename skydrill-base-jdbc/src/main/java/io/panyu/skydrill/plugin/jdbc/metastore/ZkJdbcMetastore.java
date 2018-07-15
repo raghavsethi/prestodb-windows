@@ -28,6 +28,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
@@ -47,7 +48,7 @@ public class ZkJdbcMetastore
   public ZkJdbcMetastore(JdbcConnectorId connectorId,
                          ZkJdbcMetastoreConfig config) {
     this.connectorId = connectorId;
-    this.viewRootPath = String.format("%s/%s", config.getViewRootPath(), connectorId);
+    this.viewRootPath = String.format("%s/%s/views", config.getCatalogRootPath(), connectorId);
 
     ObjectMapperProvider provider = new ObjectMapperProvider();
     provider.setJsonDeserializers(ImmutableMap.of(Type.class, new TypeDeserializer(new TypeRegistry())));
@@ -115,31 +116,23 @@ public class ZkJdbcMetastore
   }
 
   @Override
-  public String getViewData(SchemaTableName viewName) {
+  public Optional<String> getViewData(SchemaTableName viewName) {
     try {
       checkAndStartCurator();
       String viewPath = getPathString(viewRootPath, viewName);
       Stat stat = curator.checkExists().forPath(viewPath);
       if ((stat != null) && (stat.getDataLength() > 0)) {
-        return new String(curator.getData().forPath(viewPath));
+        return Optional.of(new String(curator.getData().forPath(viewPath)));
       }
     } catch (Throwable e){
       log.error(e);
     }
-    return null;
+    return Optional.empty();
   }
 
   @Override
-  public ViewDefinition getViewDefinition(SchemaTableName viewName) {
-    try {
-      String viewData = getViewData(viewName);
-      if (viewData != null) {
-        return viewCodec.fromJson(viewData);
-      }
-    } catch (Exception e) {
-      log.error(e);
-    }
-    return null;
+  public Optional<ViewDefinition> getViewDefinition(SchemaTableName viewName) {
+    return getViewData(viewName).map(viewCodec::fromJson);
   }
 
   public boolean isView(SchemaTableName viewName){
@@ -172,8 +165,8 @@ public class ZkJdbcMetastore
   }
 
   @Override
-  public void close() throws IOException {
+  public void close() {
     if (curator.getState() != CuratorFrameworkState.STOPPED)
-      curator.create();
+      curator.close();
   }
 }

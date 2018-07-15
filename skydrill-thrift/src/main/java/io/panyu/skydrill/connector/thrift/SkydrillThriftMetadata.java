@@ -56,7 +56,7 @@ public class SkydrillThriftMetadata
     public ConnectorTableHandle getTableHandle(ConnectorSession session, SchemaTableName tableName)
     {
         if (isViewPushdownEnabled(session)) {
-            Optional<String> viewData = Optional.ofNullable(client.getViewData(tableName));
+            Optional<String> viewData = client.getViewData(tableName);
             if (viewData.isPresent()) {
                 return new ThriftTableHandle(tableName);
             }
@@ -69,8 +69,8 @@ public class SkydrillThriftMetadata
     {
         if (isViewPushdownEnabled(session)) {
             ThriftTableHandle handle = ((ThriftTableHandle) tableHandle);
-            Optional<ViewDefinition> viewDefinition = Optional.ofNullable(
-                    client.getViewDefinition(new SchemaTableName(handle.getSchemaName(), handle.getTableName())));
+            Optional<ViewDefinition> viewDefinition = 
+                    client.getViewDefinition(new SchemaTableName(handle.getSchemaName(), handle.getTableName()));
             if (viewDefinition.isPresent()) {
                 return viewDefinition.get().getColumns().stream()
                         .collect(toImmutableMap(ViewDefinition.ViewColumn::getName,
@@ -115,10 +115,9 @@ public class SkydrillThriftMetadata
         }
 
         for (SchemaTableName schemaTableName : tableNames) {
-            String viewData = client.getViewData(schemaTableName);
-            if (viewData != null) {
-                views.put(schemaTableName, new ConnectorViewDefinition(schemaTableName, Optional.empty(), viewData));
-            }
+            client.getViewData(schemaTableName).ifPresent(x ->
+                views.put(schemaTableName, new ConnectorViewDefinition(schemaTableName, Optional.empty(), x))
+            );
         }
 
         return views.build();

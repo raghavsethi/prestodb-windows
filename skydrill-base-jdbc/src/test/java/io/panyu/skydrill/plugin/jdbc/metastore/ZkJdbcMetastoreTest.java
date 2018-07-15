@@ -66,13 +66,13 @@ public class ZkJdbcMetastoreTest {
     @Test
     public void testGetViewData() {
         metastore.createView(viewName, viewData, true);
-        assertEquals(metastore.getViewData(viewName), "{\"originalSql\":\"select foo from bar\",\"catalog\":\"cat\",\"schema\":\"test\",\"columns\":[{\"name\":\"count\",\"type\":\"bigint\"}],\"owner\":\"me\"}");
+        assertEquals(metastore.getViewData(viewName).get(), "{\"originalSql\":\"select foo from bar\",\"catalog\":\"cat\",\"schema\":\"test\",\"columns\":[{\"name\":\"count\",\"type\":\"bigint\"}],\"owner\":\"me\"}");
     }
 
     @Test
     public void testGetViewDefinition() {
         metastore.createView(viewName, viewData, true);
-        assertEquals(metastore.getViewDefinition(viewName).toString(), viewDefinition.toString());
+        assertEquals(metastore.getViewDefinition(viewName).get().toString(), viewDefinition.toString());
     }
 
     @Test

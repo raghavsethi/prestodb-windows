@@ -67,11 +67,11 @@ public class SkydrillThriftClient
         return metastore.listViews(schema);
     }
 
-    public String getViewData(SchemaTableName viewName) {
+    public Optional<String> getViewData(SchemaTableName viewName) {
         return metastore.getViewData(viewName);
     }
 
-    protected ViewDefinition getViewDefinition(SchemaTableName viewName) {
+    protected Optional<ViewDefinition> getViewDefinition(SchemaTableName viewName) {
         return metastore.getViewDefinition(viewName);
     }
 
