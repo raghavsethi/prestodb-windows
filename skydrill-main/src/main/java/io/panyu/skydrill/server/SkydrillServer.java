@@ -52,7 +52,7 @@ import io.airlift.tracetoken.TraceTokenModule;
 import io.panyu.skydrill.discovery.DiscoveryModule;
 import io.panyu.skydrill.election.LeaderElection;
 import io.panyu.skydrill.election.LeaderElectionWatcher;
-import io.panyu.skydrill.metadata.SkydrillCatalogStore;
+import io.panyu.skydrill.metadata.CatalogStore;
 import io.panyu.skydrill.proxy.HttpProxyServer;
 import org.weakref.jmx.guice.MBeanModule;
 
@@ -123,7 +123,7 @@ public class SkydrillServer implements Runnable {
             Injector injector = app.strictConfig().initialize();
             injector.getInstance(PluginManager.class).loadPlugins();
             injector.getInstance(StaticCatalogStore.class).loadCatalogs();
-            injector.getInstance(SkydrillCatalogStore.class).loadCatalogs();
+            injector.getInstance(CatalogStore.class).loadCatalogs();
 
             updateConnectorIds(
                     injector.getInstance(Announcer.class),

@@ -16,8 +16,8 @@ package io.panyu.skydrill.server;
 import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.google.inject.Scopes;
-import io.panyu.skydrill.metadata.SkydrillCatalogStore;
-import io.panyu.skydrill.metadata.SkydrillCatalogStoreConfig;
+import io.panyu.skydrill.metadata.CatalogStore;
+import io.panyu.skydrill.metadata.CatalogStoreConfig;
 import org.apache.curator.framework.CuratorFramework;
 
 import static io.airlift.configuration.ConfigBinder.configBinder;
@@ -28,8 +28,8 @@ public class SkydrillModule
   @Override
   public void configure(Binder binder) {
     binder.bind(CuratorFramework.class).to(SkydrillCurator.class).in(Scopes.SINGLETON);
-    binder.bind(SkydrillCatalogStore.class).in(Scopes.SINGLETON);
+    binder.bind(CatalogStore.class).in(Scopes.SINGLETON);
     configBinder(binder).bindConfig(SkydrillConfig.class);
-    configBinder(binder).bindConfig(SkydrillCatalogStoreConfig.class);
+    configBinder(binder).bindConfig(CatalogStoreConfig.class);
   }
 }

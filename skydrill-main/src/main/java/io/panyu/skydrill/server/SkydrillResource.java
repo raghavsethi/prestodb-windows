@@ -17,76 +17,92 @@ import javax.inject.Inject;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 
-import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Strings;
+import com.google.common.base.Charsets;
 import io.airlift.log.Logger;
-import io.panyu.skydrill.metadata.SkydrillCatalogStore;
-import io.panyu.skydrill.metadata.SkydrillCatalogStoreConfig;
+import io.panyu.skydrill.metadata.CatalogStore;
+import io.panyu.skydrill.metadata.CatalogStoreConfig;
 import org.apache.curator.framework.CuratorFramework;
+import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.data.Stat;
 
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
-@Path("/v1/cat")
+@Path("/v1/zk")
 public class SkydrillResource {
   private static final Logger log = Logger.get(SkydrillResource.class);
   private final CuratorFramework curator;
-  private final SkydrillCatalogStoreConfig config;
-  private final SkydrillCatalogStore catalogStore;
+  private final CatalogStoreConfig config;
+  private final CatalogStore catalogStore;
 
   @Inject
   public SkydrillResource(CuratorFramework curator,
-                          SkydrillCatalogStoreConfig config,
-                          SkydrillCatalogStore catalogStore) throws Exception
+                          CatalogStoreConfig config,
+                          CatalogStore catalogStore)
   {
     this.curator = requireNonNull(curator);
     this.config = requireNonNull(config);
     this.catalogStore = requireNonNull(catalogStore);
   }
 
-  private String toValidJSON(final String input, ObjectMapper mapper) throws Exception
+  @GET
+  @Path("get")
+  @Produces(APPLICATION_JSON)
+  public Response getData(@QueryParam("path") String path) throws Exception
   {
-    if (Strings.isNullOrEmpty(input))
-      return null;
-    
-    mapper = (mapper == null)? new ObjectMapper() : mapper;
-    try {
-      mapper.readTree(input);
-      return input;
-    } catch (JsonParseException e) {
-      return mapper.writeValueAsString(input);
+    Response.ResponseBuilder response;
+
+    if (curator.checkExists().forPath(path) == null) {
+      response = Response.status(404, "not found");
+    } else {
+      Optional<byte[]> bytes = Optional.ofNullable(curator.getData().forPath(path));
+      response = Response.ok(bytes.map(x -> new String(x, Charsets.UTF_8)).orElse(""));
     }
+    return response.build();
   }
 
-  @GET
-  @Path("children")
+  @POST
+  @Path("set")
   @Produces(APPLICATION_JSON)
-  public List<String> children(@QueryParam("path") String path) throws Exception
+  public Response setData(String content, @QueryParam("path") String path) throws Exception
   {
-    return curator.getChildren().forPath(path).stream()
-            .sorted()
-            .collect(Collectors.toList());
+    requireNonNull(path, "path is null");
+    requireNonNull(content, "content id null");
+    Response.ResponseBuilder response;
+
+    if (curator.checkExists().forPath(path) == null) {
+      response = Response.status(404, "not found");
+    } else {
+      curator.setData().forPath(path, content.getBytes());
+      response = Response.ok(content.length());
+    }
+    return response.build();
   }
 
-  @GET
-  @Path("data")
+  @PUT
+  @Path("add")
   @Produces(APPLICATION_JSON)
-  public Response data(@QueryParam("path") String path) throws Exception
+  public Response addData(String content, @QueryParam("path") String path) throws Exception
   {
-    Optional<byte[]> bytes = Optional.ofNullable(curator.getData().forPath(path));
-    String queryResults = bytes.map(String::new).orElse(null);
-    Response.ResponseBuilder response = Response.ok(toValidJSON(queryResults, null));
+    requireNonNull(path, "path is null");
+    requireNonNull(content, "content id null");
+    Response.ResponseBuilder response;
+
+    if (curator.checkExists().forPath(path) == null) {
+      curator.create().withMode(CreateMode.PERSISTENT).forPath(path, content.getBytes());
+      response = Response.ok(content.length());
+    } else {
+      response = Response.status(409, "exists");
+    }
     return response.build();
   }
 
@@ -95,29 +111,16 @@ public class SkydrillResource {
   @Produces(APPLICATION_JSON)
   public Response stat(@QueryParam("path") String path) throws Exception
   {
+    Response.ResponseBuilder response;
+
     Optional<Stat> stat = Optional.ofNullable(curator.checkExists().forPath(path));
-    ObjectMapper mapper = new ObjectMapper();
-    String statString = mapper.writeValueAsString(stat.orElse(null));
-    Response.ResponseBuilder response = Response.ok(statString);
-    return response.build();
-  }
-
-  @GET
-  @Path("node")
-  @Produces(APPLICATION_JSON)
-  public Response node(@QueryParam("path") String path) throws Exception
-  {
-    org.apache.zookeeper.data.Stat stat = new Stat();
-    Optional<byte[]> bytes = Optional.ofNullable(curator.getData().storingStatIn(stat).forPath(path));
-    ObjectMapper mapper = new ObjectMapper();
-
-    String json = "{\"data\":" +
-            toValidJSON(bytes.map(String::new).orElse(null), mapper) +
-            ",\"stat\":" +
-            mapper.writeValueAsString(stat) +
-            "}";
-
-    Response.ResponseBuilder response = Response.ok(json);
+    if (stat.isPresent()) {
+      ObjectMapper mapper = new ObjectMapper();
+      String statString = mapper.writeValueAsString(stat.get());
+      response = Response.ok(statString);
+    } else {
+      response = Response.status(404, "not found");
+    }
     return response.build();
   }
 
@@ -126,53 +129,16 @@ public class SkydrillResource {
   @Produces(APPLICATION_JSON)
   public Response delete(@QueryParam("path") String path) throws Exception
   {
-    curator.delete().forPath(path);
-    boolean queryResults = curator.checkExists().forPath(path) == null;
-    Response.ResponseBuilder response = Response.ok(queryResults);
-    return response.build();
-  }
+    Response.ResponseBuilder response;
 
-  @POST
-  @Path("install")
-  @Produces(APPLICATION_JSON)
-  public Response install(String content,
-                      @QueryParam("catalog") String catalog) throws Exception
-  {
-    requireNonNull(catalog);
-    requireNonNull(content);
-
-    String path = String.format("%s/%s", config.getCatalogRootPath(), catalog);
     if (curator.checkExists().forPath(path) == null) {
-      String s = curator.create().forPath(path, content.getBytes());
-      catalogStore.loadCatalog(catalog);
-      Response.ResponseBuilder response = Response.ok(s);
-      return response.build();
+      response = Response.status(404, "not found");
     } else {
-      Response.ResponseBuilder response = Response.status(400, "exists");
-      return response.build();
+      curator.delete().forPath(path);
+      boolean queryResults = curator.checkExists().forPath(path) == null;
+      response = Response.ok(queryResults);
     }
-  }
-
-  @DELETE
-  @Path("uninstall")
-  @Produces(APPLICATION_JSON)
-  public Response uninstall(@QueryParam("catalog") String catalog) throws Exception
-  {
-    requireNonNull(catalog);
-    String path = String.format("%s/%s", config.getCatalogRootPath(), catalog);
-    curator.delete().forPath(path);
-    boolean queryResults = curator.checkExists().forPath(path) == null;
-    Response.ResponseBuilder response = Response.ok(queryResults);
     return response.build();
   }
 
-  @GET
-  @Path("list")
-  @Produces(APPLICATION_JSON)
-  public List<String> list() throws Exception
-  {
-    return curator.getChildren().forPath(config.getCatalogRootPath()).stream()
-            .sorted()
-            .collect(Collectors.toList());
-  }
 }

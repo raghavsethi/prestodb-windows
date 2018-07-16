@@ -77,16 +77,11 @@ public class HttpProxyServer
   }
 
   private static HttpServerConfig getHttpServerConfig(ProxyServerConfig config) {
-    config.setHttpEnabled(false);
-    config.setHttpsEnabled(false);
-
     if (config.isEnabled()) {
       if (config.isSslEnabled()) {
-        config.setHttpsEnabled(true);
-        config.setHttpsPort(config.getProxyPort());
+        config.setHttpsEnabled(true).setHttpsPort(config.getProxyPort()).setHttpEnabled(false);
       } else {
-        config.setHttpEnabled(true);
-        config.setHttpPort(config.getProxyPort());
+        config.setHttpEnabled(true).setHttpPort(config.getProxyPort()).setHttpsEnabled(false);
       }
     }
     return config;

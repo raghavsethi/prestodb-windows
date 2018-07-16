@@ -2,7 +2,7 @@ package io.panyu.skydrill.metadata;
 
 import io.airlift.configuration.Config;
 
-public class SkydrillCatalogStoreConfig {
+public class CatalogStoreConfig {
     private String catalogRootPath = "/skydrill/runtime/catalog";
 
     public String getCatalogRootPath() {
@@ -10,7 +10,7 @@ public class SkydrillCatalogStoreConfig {
     }
 
     @Config("runtime.catalog.root-path")
-    public SkydrillCatalogStoreConfig setCatalogRootPath(String rootPath) {
+    public CatalogStoreConfig setCatalogRootPath(String rootPath) {
         this.catalogRootPath = rootPath;
         return this;
     }

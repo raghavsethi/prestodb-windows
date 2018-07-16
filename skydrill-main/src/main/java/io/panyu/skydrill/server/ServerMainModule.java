@@ -20,6 +20,7 @@ import com.google.inject.Scopes;
 import io.panyu.skydrill.election.LeaderElection;
 import io.panyu.skydrill.election.LeaderElectionConfig;
 import io.panyu.skydrill.election.LeaderElectionWatcher;
+import io.panyu.skydrill.metadata.CatalogStoreResource;
 import io.panyu.skydrill.proxy.HttpProxyServer;
 import io.panyu.skydrill.proxy.ProxyServerConfig;
 
@@ -43,6 +44,7 @@ public class ServerMainModule
 
       ServerConfig serverConfig = buildConfigObject(ServerConfig.class);
       if (serverConfig.isCoordinator()) {
+        jaxrsBinder(binder).bind(CatalogStoreResource.class);
         httpServerBinder(binder).bindResource("/cat", "skydrill").withWelcomeFile("cat.html");
 
         binder.bind(LeaderElection.class).in(Scopes.SINGLETON);
@@ -51,6 +53,5 @@ public class ServerMainModule
       } else {
         binder.bind(LeaderElectionWatcher.class).in(Scopes.SINGLETON);
       }
-
     }
 }
