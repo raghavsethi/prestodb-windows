@@ -1,3 +1,16 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package io.panyu.skydrill.metadata;
 
 import com.facebook.presto.connector.ConnectorManager;
@@ -14,7 +27,11 @@ import org.apache.zookeeper.Watcher;
 import javax.inject.Inject;
 
 import java.io.ByteArrayInputStream;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Properties;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
@@ -54,9 +71,19 @@ public class CatalogStore
 
     @Override
     public void process(WatchedEvent event) throws Exception {
-        curator.getData().usingWatcher(this).forPath(catalogRootPath);
+        Optional<byte[]> bytes = Optional.ofNullable(curator.getData().usingWatcher(this).forPath(catalogRootPath));
         if (event.getType() == Watcher.Event.EventType.NodeDataChanged) {
-            loadCatalogs();
+            if (!config.isCoordinator()) {
+                bytes.ifPresent(x -> {
+                    String nodeData = new String(x);
+                    if (nodeData.startsWith("+")) {
+                        loadCatalog(nodeData.substring(1));
+                    }
+                    if (nodeData.startsWith("-")) {
+                        dropCatalog(nodeData.substring(1));
+                    }
+                });
+            }
         }
     }
 
@@ -77,6 +104,10 @@ public class CatalogStore
                 String connectorName = map.remove("connector.name");
                 connectorManager.createConnection(catalogName, connectorName, ImmutableMap.copyOf(map));
                 log.info("-- Added catalog %s using connector %s --", catalogName, connectorName);
+
+                if (config.isCoordinator()) {
+                    curator.setData().forPath(catalogRootPath, ("+" + catalogName).getBytes());
+                }
             }
         } catch (Exception e) {
             log.error(e);
@@ -84,9 +115,17 @@ public class CatalogStore
     }
 
     public synchronized void dropCatalog(String catalogName) {
-        log.info("-- Unloading catalog %s --", catalogName);
-        connectorManager.dropConnection(catalogName);
-        log.info("-- Removed catalog %s --", catalogName);
+        try {
+            log.info("-- Unloading catalog %s --", catalogName);
+            connectorManager.dropConnection(catalogName);
+            log.info("-- Removed catalog %s --", catalogName);
+
+            if (config.isCoordinator()) {
+                curator.setData().forPath(catalogRootPath, ("-" + catalogName).getBytes());
+            }
+        } catch (Exception e) {
+            log.error(e);
+        }
     }
 
     public List<String> getCatalogs() {

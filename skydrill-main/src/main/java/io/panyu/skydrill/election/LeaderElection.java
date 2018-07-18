@@ -69,7 +69,7 @@ public class LeaderElection
 
     if (!leaderSelector.hasLeadership()) {
       updateLeaderCoordinatorURI();
-      curator.checkExists().usingWatcher(this).forPath(config.getLeaderElectionPath());
+      curator.getData().usingWatcher(this).forPath(config.getLeaderElectionPath());
     }
 
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -82,8 +82,12 @@ public class LeaderElection
   public void takeLeadership(CuratorFramework client) throws Exception {
     log.info("takeLeadership");
 
-    setLeaderCoordinatorURI(config.getLocalCoordinatorURI().toString());
-    setDiscoveryServiceUri(config.getLocalCoordinatorURI().toString());
+    String localCoordinatorURI = config.getLocalCoordinatorURI().toString();
+    curator.setData().forPath(config.getLeaderElectionPath(), localCoordinatorURI.getBytes(Charsets.UTF_8));
+    setCoordinatorServiceUri(localCoordinatorURI);
+    setDiscoveryServiceUri(localCoordinatorURI);
+    log.info(String.format("lead coordinator is %s", localCoordinatorURI));
+
     electionCountDown.countDown();
     exitCountDownLatch.await();
     log.info("relinquished leadership");
@@ -107,7 +111,7 @@ public class LeaderElection
 
   @Override
   public void process(WatchedEvent event) throws Exception {
-    curator.checkExists().usingWatcher(this).forPath(config.getLeaderElectionPath());
+    curator.getData().usingWatcher(this).forPath(config.getLeaderElectionPath());
     if (event.getType() == Watcher.Event.EventType.NodeDataChanged) {
       updateLeaderCoordinatorURI();
     }
@@ -132,15 +136,13 @@ public class LeaderElection
     }
   }
 
-  private void setLeaderCoordinatorURI(String coordinatorURI) throws Exception {
-    curator.setData().forPath(config.getLeaderElectionPath(), coordinatorURI.getBytes(Charsets.UTF_8));
-    setCoordinatorServiceUri(coordinatorURI);
-    log.info(String.format("lead coordinator is %s", coordinatorURI));
-  }
-
   private void updateLeaderCoordinatorURI() throws Exception {
     Optional<byte[]> bytes = Optional.ofNullable(curator.getData().forPath(config.getLeaderElectionPath()));
-    bytes.ifPresent(x -> setCoordinatorServiceUri(new String(x, Charsets.UTF_8)));
+    bytes.ifPresent(x -> {
+      String leadCoordinatorUri = new String(x, Charsets.UTF_8);
+      setCoordinatorServiceUri(leadCoordinatorUri);
+      log.info(String.format("lead coordinator is %s", leadCoordinatorUri));
+    });
   }
 
   private void executeFailFast() {
