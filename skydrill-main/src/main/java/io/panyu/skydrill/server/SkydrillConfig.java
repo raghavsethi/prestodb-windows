@@ -15,8 +15,11 @@ package io.panyu.skydrill.server;
 
 import io.airlift.configuration.Config;
 
+import java.util.Optional;
+
 public class SkydrillConfig {
   private static String CoordinatorUriKey = "coordinator.uri";
+  private static String CoordinatorLeaderKey = "coordinator.leader";
   private static String DiscoveryUriKey = "discovery.uri";
 
   private boolean zookeeperEnabled = true;
@@ -35,16 +38,25 @@ public class SkydrillConfig {
     return System.getProperty(CoordinatorUriKey);
   }
 
-  public static String setCoordinatorServiceUri(String uri) {
-    return System.setProperty(CoordinatorUriKey, uri);
+  public static void setCoordinatorServiceUri(String uri) {
+    System.setProperty(CoordinatorUriKey, uri);
+  }
+
+  public static boolean hasCoordinatorLeadership() {
+    return Optional.ofNullable(System.getProperty(CoordinatorLeaderKey))
+            .map(x -> x.equals(String.valueOf(true))).orElse(false);
+  }
+
+  public static void setCoordinatorLeadership(boolean hasLeadership) {
+    System.setProperty(CoordinatorLeaderKey, String.valueOf(hasLeadership));
   }
 
   public static String getDiscoveryServiceUri() {
     return System.getProperty(DiscoveryUriKey);
   }
 
-  public static String setDiscoveryServiceUri(String uri) {
-    return System.setProperty(DiscoveryUriKey, uri);
+  public static void setDiscoveryServiceUri(String uri) {
+    System.setProperty(DiscoveryUriKey, uri);
   }
 
   public boolean isCoordinator() {

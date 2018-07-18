@@ -36,6 +36,7 @@ import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
 import static com.google.common.collect.Maps.fromProperties;
+import static io.panyu.skydrill.server.SkydrillConfig.hasCoordinatorLeadership;
 
 public class CatalogStore
         implements CuratorWatcher
@@ -73,7 +74,7 @@ public class CatalogStore
     public void process(WatchedEvent event) throws Exception {
         Optional<byte[]> bytes = Optional.ofNullable(curator.getData().usingWatcher(this).forPath(catalogRootPath));
         if (event.getType() == Watcher.Event.EventType.NodeDataChanged) {
-            if (!config.isCoordinator()) {
+            if (!config.isCoordinator() || !hasCoordinatorLeadership()) {
                 bytes.ifPresent(x -> {
                     String nodeData = new String(x);
                     if (nodeData.startsWith("+")) {
@@ -105,7 +106,7 @@ public class CatalogStore
                 connectorManager.createConnection(catalogName, connectorName, ImmutableMap.copyOf(map));
                 log.info("-- Added catalog %s using connector %s --", catalogName, connectorName);
 
-                if (config.isCoordinator()) {
+                if (config.isCoordinator() && hasCoordinatorLeadership()) {
                     curator.setData().forPath(catalogRootPath, ("+" + catalogName).getBytes());
                 }
             }
@@ -120,7 +121,7 @@ public class CatalogStore
             connectorManager.dropConnection(catalogName);
             log.info("-- Removed catalog %s --", catalogName);
 
-            if (config.isCoordinator()) {
+            if (config.isCoordinator() && hasCoordinatorLeadership()) {
                 curator.setData().forPath(catalogRootPath, ("-" + catalogName).getBytes());
             }
         } catch (Exception e) {

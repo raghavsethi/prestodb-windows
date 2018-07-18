@@ -29,6 +29,7 @@ import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import static io.panyu.skydrill.server.SkydrillConfig.setCoordinatorLeadership;
 import static io.panyu.skydrill.server.SkydrillConfig.setCoordinatorServiceUri;
 import static io.panyu.skydrill.server.SkydrillConfig.setDiscoveryServiceUri;
 import static java.util.Objects.requireNonNull;
@@ -68,6 +69,7 @@ public class LeaderElection
     electionCountDown.await(electionCountDownSecond, TimeUnit.SECONDS);
 
     if (!leaderSelector.hasLeadership()) {
+      setCoordinatorLeadership(false);
       updateLeaderCoordinatorURI();
       curator.getData().usingWatcher(this).forPath(config.getLeaderElectionPath());
     }
@@ -86,6 +88,7 @@ public class LeaderElection
     curator.setData().forPath(config.getLeaderElectionPath(), localCoordinatorURI.getBytes(Charsets.UTF_8));
     setCoordinatorServiceUri(localCoordinatorURI);
     setDiscoveryServiceUri(localCoordinatorURI);
+    setCoordinatorLeadership(true);
     log.info(String.format("lead coordinator is %s", localCoordinatorURI));
 
     electionCountDown.countDown();
