@@ -2,7 +2,7 @@ description = 'skydrill-presto'
 group = 'io.panyu.skydrill'
 
 allprojects {
-  version = "0.205"
+  version = "0.206"
   ext.prestoVersion = "${version}"
   ext.airliftVersion = "0.171"
 }
@@ -42,7 +42,7 @@ task makeTarget {
           into prestoTarget + '/bin/cli' }
 
     // update hive plugin
-    delete prestoTarget + '/plugin/hive-hadoop2/hadoop-apache2-2.7.4-1.jar'
+    delete prestoTarget + '/plugin/hive-hadoop2/hadoop-apache2-2.7.4-2.jar'
     copy { from 'presto-hadoop-apache2/target/hadoop-apache2-2.9.0.jar' into prestoTarget + '/plugin/hive-hadoop2' }
     copy { from 'skydrill-hive/build/libs' into prestoTarget + '/plugin/hive-hadoop2' }
 
