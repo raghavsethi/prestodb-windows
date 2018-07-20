@@ -40,3 +40,8 @@ task packageTests(type: Jar) {
 }
 
 artifacts.archives packageTests
+
+task makeDistro(type: Copy) {
+    into "$buildDir/libs"
+    from configurations.runtime
+}

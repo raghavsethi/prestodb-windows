@@ -55,7 +55,7 @@
     goto :eof
   )
 
-  set corecommands=server cli zookeeper dfs
+  set corecommands=server cli zookeeper dfs partition
   for %%i in ( %corecommands% ) do (
     if %SKYDRILL-command% == %%i set corecommand=true  
   )
@@ -94,6 +94,12 @@
   set SKYDRILL_OPTS=%SKYDRILL_CLIENT_OPTS% %SKYDRILL_OPTS% 
   goto :eof
 
+:partition
+  set CLASSPATH=%SKYDRILL_HOME%\plugin\hive-hadoop2\*
+  set CLASS=io.panyu.skydrill.hive.HivePartitionUtils
+  set SKYDRILL_OPTS=%SKYDRILL_CLIENT_OPTS% %SKYDRILL_OPTS%
+  goto :eof
+
 :zookeeper
   set CLASS=org.apache.zookeeper.server.quorum.QuorumPeerMain
   set ZOOKEEPER_OPTS=-XX:+UseG1GC -XX:MaxGCPauseMillis=10 -XX:-PrintGC -Dlog4j.configuration=%LOG4J_CONF_FILE% -Dcom.sun.management.jmxremote.port=%ZOOKEEPER_JMX_PORT%
@@ -127,6 +133,7 @@
   @echo   help
   @echo.
   @echo   server               launch presto server
+  @echo   partition            launch hive table partition tool
   @echo.
   @echo   cli                  launch presto shell
   @echo   version              print the version

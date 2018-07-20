@@ -38,13 +38,16 @@ task makeTarget {
       into prestoTarget + '/lib'
       include 'curator*', 'zookeeper*', 'jetty-*', 'json-simple*', 'skydrill*', 'log4j*', 'tpch*', 'presto-tpch*'}
 
+    // presto cli
     copy { from configurations.deploy.find {it.name.contains("presto-cli-${prestoVersion}")}
           into prestoTarget + '/bin/cli' }
 
     // update hive plugin
     delete prestoTarget + '/plugin/hive-hadoop2/hadoop-apache2-2.7.4-2.jar'
     copy { from 'presto-hadoop-apache2/target/hadoop-apache2-2.9.0.jar' into prestoTarget + '/plugin/hive-hadoop2' }
-    copy { from 'skydrill-hive/build/libs' into prestoTarget + '/plugin/hive-hadoop2' }
+    copy { from 'skydrill-hive/build/libs'
+      into prestoTarget + '/plugin/hive-hadoop2'
+      include 'skydrill*', 'jackson*', 'unit*', 'slice*', 'jol*', 'presto-*' }
 
     // update thrift plugin
     copy { from 'skydrill-thrift/build/libs'
@@ -106,7 +109,7 @@ task buildSkyDrillThrift(type: GradleBuild) {
 task buildSkyDrillHive(type: GradleBuild) {
   dir = 'skydrill-hive'
   startParameter.projectProperties.put("prestoVersion", "${prestoVersion}")
-  tasks = gradle.startParameter.taskNames.contains("clean") ? ['clean', 'jar'] : ['jar']
+  tasks = gradle.startParameter.taskNames.contains("clean") ? ['clean', 'jar', 'makeDistro'] : ['jar', 'makeDistro']
 }
 
 task buildSkyDrillMain(type: GradleBuild) {

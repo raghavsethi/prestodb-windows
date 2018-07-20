@@ -21,6 +21,7 @@ import com.facebook.presto.hive.metastore.thrift.ThriftHiveMetastore;
 import com.facebook.presto.hive.s3.HiveS3Config;
 import com.facebook.presto.hive.s3.PrestoS3ConfigurationUpdater;
 import com.facebook.presto.hive.s3.S3ConfigurationUpdater;
+import com.facebook.presto.spi.PrestoException;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -93,7 +94,7 @@ public class HivePartitionUtils {
             switch (cmd) {
                 case "add" : {
                     if (args.length < 3) {
-                        log.error("missing partition value");
+                        System.out.println("missing partition value");
                         printUsage();
                         return;
                     }
@@ -107,13 +108,13 @@ public class HivePartitionUtils {
 
                     partitionValue = (args.length == 4)? partitionValue + " " + args[3] : partitionValue;
                     utils.addPartition(store, databaseName, tableName, partitionValue);
-                    log.info("added " + partitionValue);
+                    System.out.print("added " + partitionValue);
                 }
                 break;
 
                 case "update" : {
                     if (args.length < 4) {
-                        log.error("missing partition value");
+                        System.out.println("missing partition value");
                         printUsage();
                         return;
                     }
@@ -122,31 +123,32 @@ public class HivePartitionUtils {
                     String location = args[3];
 
                     utils.alterPartition(store, databaseName, tableName, partitionValue, location);
-                    log.info("updated " + partitionValue); }
+                    System.out.println("updated " + partitionValue); }
                 break;
 
                 case "drop": {
                     String partitionValue = args[2];
                     utils.dropPartition(store, databaseName, tableName, partitionValue);
-                    log.info("dropped " + partitionValue); }
+                    System.out.println("dropped " + partitionValue); }
                 break;
 
                 case "list": {
                     utils.listPartitions(store, databaseName, tableName)
-                            .forEach(x -> log.info("%s,%s%n", x,
-                                    utils.getPartition(store, databaseName, tableName, utils.getNormalizedValue(x)))); }
+                            .forEach(x -> System.out.print(String.format("%s,%s%n", x,
+                                    utils.getPartition(store, databaseName, tableName, utils.getNormalizedValue(x))))); }
                 break;
 
                 case "get":  {
                     String partitionValue = utils.getNormalizedValue(args[2]);
-                    log.info(utils.getPartition(store, databaseName, tableName, partitionValue)); }
+                    System.out.print(utils.getPartition(store, databaseName, tableName, partitionValue)); }
                 break;
 
                 default:
-                    log.error("invalid cmd " + cmd);
+                    System.out.println("invalid cmd " + cmd);
             }
         } catch (Throwable e) {
-            throw new RuntimeException(e);
+            System.out.println(e.getLocalizedMessage() + ((e instanceof PrestoException) ?
+                    ", ensure " + tableName + " is an external table" : ""));
         }
     }
 
@@ -193,7 +195,8 @@ public class HivePartitionUtils {
                 new AzureBlobMetastoreModule(connectorId),
                 binder -> binder.bind(AzureBlobMetastore.class).in(Scopes.SINGLETON));
 
-        Injector injector = app.setRequiredConfigurationProperties(config).initialize();
+        Injector injector = app.setRequiredConfigurationProperties(config)
+                                .quiet().doNotInitializeLogging().initialize();
         return injector.getInstance(AzureBlobMetastore.class);
     }
 
@@ -204,7 +207,8 @@ public class HivePartitionUtils {
                 new AdlsMetastoreModule(connectorId),
                 binder -> binder.bind(AdlsMetastore.class).in(Scopes.SINGLETON));
 
-        Injector injector = app.setRequiredConfigurationProperties(config).initialize();
+        Injector injector = app.setRequiredConfigurationProperties(config)
+                                .quiet().doNotInitializeLogging().initialize();
         return injector.getInstance(AdlsMetastore.class);
     }
 
