@@ -26,8 +26,8 @@ public class HdfsConfigurationUpdater
         config.set("fs.azure.delete.threads", String.valueOf(processors));
         config.set("fs.azure.rename.threads", String.valueOf(processors));
 
-        if (hiveClientConfig.getAdlOAuth2RefeshUrl() != null) {
-            config.set("fs.adl.oauth2.refresh.url", hiveClientConfig.getAdlOAuth2RefeshUrl());
+        if (hiveClientConfig.getAdlOAuth2RefreshUrl() != null) {
+            config.set("fs.adl.oauth2.refresh.url", hiveClientConfig.getAdlOAuth2RefreshUrl());
         }
 
         if (hiveClientConfig.getAdlOAuth2ClientId() != null) {

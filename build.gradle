@@ -5,6 +5,8 @@ allprojects {
   version = "0.206"
   ext.prestoVersion = "${version}"
   ext.airliftVersion = "0.171"
+  ext.curatorVersion = "4.0.1"
+  ext.zookeeperVersion = "3.4.12"
 }
 
 configurations {

@@ -41,8 +41,7 @@ public class PostgreSqlClient
     @Inject
     public PostgreSqlClient(JdbcConnectorId connectorId,
                             BaseJdbcConfig config,
-                            JdbcMetastore metastore) throws Exception
-    {
+                            JdbcMetastore metastore) {
         super(connectorId, config, "\"", new DriverConnectionFactory(new Driver(), config), metastore);
     }
 

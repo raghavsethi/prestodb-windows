@@ -36,7 +36,7 @@ import static io.panyu.skydrill.server.SkydrillConfig.getCoordinatorServiceUri;
 public class HttpProxyServer
         extends io.airlift.http.server.HttpServer
 {
-  private static Map<String, String> parameters = new HashMap<String, String>() {{ put("preserveHost", "true"); }};
+  private static final Map<String, String> parameters = new HashMap<String, String>() {{ put("preserveHost", "true"); }};
 
   @Inject
   public HttpProxyServer(ProxyServerConfig config, NodeInfo nodeInfo) throws Exception {

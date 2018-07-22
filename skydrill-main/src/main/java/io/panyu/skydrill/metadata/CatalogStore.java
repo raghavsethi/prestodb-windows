@@ -73,8 +73,9 @@ public class CatalogStore
     @Override
     public void process(WatchedEvent event) throws Exception {
         Optional<byte[]> bytes = Optional.ofNullable(curator.getData().usingWatcher(this).forPath(catalogRootPath));
+        boolean forSubscribers = !config.isCoordinator() || !hasCoordinatorLeadership();
         if (event.getType() == Watcher.Event.EventType.NodeDataChanged) {
-            if (!config.isCoordinator() || !hasCoordinatorLeadership()) {
+            if (forSubscribers) {
                 bytes.ifPresent(x -> {
                     String nodeData = new String(x);
                     if (nodeData.startsWith("+")) {
@@ -93,6 +94,10 @@ public class CatalogStore
     }
 
     public synchronized void loadCatalog(String catalogName) {
+        loadCatalog(catalogName, false);
+    }
+
+    public synchronized void loadCatalog(String catalogName, boolean forPublishing) {
         try {
             String catalogPath = String.format("%s/%s", catalogRootPath, catalogName);
             Optional<byte[]> bytes = Optional.ofNullable(curator.getData().forPath(catalogPath));
@@ -106,7 +111,7 @@ public class CatalogStore
                 connectorManager.createConnection(catalogName, connectorName, ImmutableMap.copyOf(map));
                 log.info("-- Added catalog %s using connector %s --", catalogName, connectorName);
 
-                if (config.isCoordinator() && hasCoordinatorLeadership()) {
+                if (forPublishing) {
                     curator.setData().forPath(catalogRootPath, ("+" + catalogName).getBytes());
                 }
             }
@@ -116,12 +121,16 @@ public class CatalogStore
     }
 
     public synchronized void dropCatalog(String catalogName) {
+        dropCatalog(catalogName, false);
+    }
+
+    public synchronized void dropCatalog(String catalogName, boolean forPublishing) {
         try {
             log.info("-- Unloading catalog %s --", catalogName);
             connectorManager.dropConnection(catalogName);
             log.info("-- Removed catalog %s --", catalogName);
 
-            if (config.isCoordinator() && hasCoordinatorLeadership()) {
+            if (forPublishing) {
                 curator.setData().forPath(catalogRootPath, ("-" + catalogName).getBytes());
             }
         } catch (Exception e) {

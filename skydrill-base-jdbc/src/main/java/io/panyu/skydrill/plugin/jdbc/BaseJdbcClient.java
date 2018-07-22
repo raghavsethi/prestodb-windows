@@ -112,18 +112,14 @@ public class BaseJdbcClient
   @Override
   public PreparedStatement buildSql(Connection connection, JdbcSplit split, List<JdbcColumnHandle> columnHandles)
           throws SQLException {
-    String schemaName = split.getSchemaName();
-    String tableName = split.getTableName();
-
     return new QueryBuilder(identifierQuote).buildSql(
             this,
             connection,
             split.getCatalogName(),
-            schemaName,
-            tableName,
+            split.getSchemaName(),
+            split.getTableName(),
             columnHandles,
-            split.getTupleDomain(),
-            metastore);
+            split.getTupleDomain());
   }
 
   @Override
@@ -166,7 +162,12 @@ public class BaseJdbcClient
     return views.build();
   }
 
-  private JdbcColumnHandle makeJdbcColumnHandle(String connectorId, ViewDefinition.ViewColumn column) {
+  @Override
+  public Optional<ViewDefinition> getViewDefinition(SchemaTableName viewName)  {
+    return metastore.getViewDefinition(viewName);
+  }
+
+  protected JdbcColumnHandle makeJdbcColumnHandle(String connectorId, ViewDefinition.ViewColumn column) {
     switch (column.getType().getDisplayName()) {
       case "boolean":
         return new JdbcColumnHandle(connectorId, column.getName(), new JdbcTypeHandle(Types.BOOLEAN, 1, 0), BOOLEAN);

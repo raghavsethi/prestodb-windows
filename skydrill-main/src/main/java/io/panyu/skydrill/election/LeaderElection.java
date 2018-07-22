@@ -17,6 +17,7 @@ import com.google.common.base.Charsets;
 import io.airlift.log.Logger;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.api.CuratorWatcher;
+import org.apache.curator.framework.recipes.leader.CancelLeadershipException;
 import org.apache.curator.framework.recipes.leader.LeaderSelector;
 import org.apache.curator.framework.recipes.leader.LeaderSelectorListener;
 import org.apache.curator.framework.state.ConnectionState;
@@ -31,7 +32,6 @@ import java.util.concurrent.TimeUnit;
 
 import static io.panyu.skydrill.server.SkydrillConfig.setCoordinatorLeadership;
 import static io.panyu.skydrill.server.SkydrillConfig.setCoordinatorServiceUri;
-import static io.panyu.skydrill.server.SkydrillConfig.setDiscoveryServiceUri;
 import static java.util.Objects.requireNonNull;
 
 public class LeaderElection
@@ -87,28 +87,22 @@ public class LeaderElection
     String localCoordinatorURI = config.getLocalCoordinatorURI().toString();
     curator.setData().forPath(config.getLeaderElectionPath(), localCoordinatorURI.getBytes(Charsets.UTF_8));
     setCoordinatorServiceUri(localCoordinatorURI);
-    setDiscoveryServiceUri(localCoordinatorURI);
     setCoordinatorLeadership(true);
     log.info(String.format("lead coordinator is %s", localCoordinatorURI));
-
     electionCountDown.countDown();
+    
     exitCountDownLatch.await();
     log.info("relinquished leadership");
   }
 
   @Override
   public void stateChanged(CuratorFramework client, ConnectionState newState) {
-    switch (newState) {
-      case LOST:
-        log.error("zookeeper connection lost");
+    if (client.getConnectionStateErrorPolicy().isErrorState(newState)) {
+      if (config.isFailFastEnabled()) {
         executeFailFast();
-        break;
-      case SUSPENDED:
-        log.warn("zookeeper connection suspended");
-        executeFailFast();
-        break;
-      default:
-        log.info("zookeeper connection state changed: " + newState);
+      }
+
+      throw new CancelLeadershipException();
     }
   }
 

@@ -109,7 +109,7 @@ public class CatalogStoreResource {
         String catalogPath = String.format("%s/%s", config.getCatalogRootPath(), catalog);
         if (curator.checkExists().forPath(catalogPath) == null) {
             String s = curator.create().forPath(catalogPath, content.getBytes());
-            catalogStore.loadCatalog(catalog);
+            catalogStore.loadCatalog(catalog, true);
             response = Response.ok(s);
         } else {
             response = Response.status(409, "exists");
@@ -129,7 +129,7 @@ public class CatalogStoreResource {
         if (curator.checkExists().forPath(catalogPath) == null) {
             response = Response.status(404, "not found");
         } else {
-            catalogStore.dropCatalog(catalog);
+            catalogStore.dropCatalog(catalog, true);
             curator.delete().forPath(catalogPath);
             response = (curator.checkExists().forPath(catalogPath) == null)? Response.ok() :
                     Response.status(500, "delete catalog failed");

@@ -37,8 +37,7 @@ public class SqlServerClient
     public SqlServerClient(JdbcConnectorId connectorId,
                            BaseJdbcConfig config,
                            SqlServerClientConfig clientConfig,
-                           JdbcMetastore metastore) throws Exception
-    {
+                           JdbcMetastore metastore) {
         super(connectorId, config, "\"", new DriverConnectionFactory(config, clientConfig), metastore);
         this.clientConfig = clientConfig;
     }

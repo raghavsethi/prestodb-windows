@@ -27,23 +27,7 @@ public class DriverConnectionFactory
 
   public DriverConnectionFactory(BaseJdbcConfig config, SqlServerClientConfig clientConfig)
   {
-    this(config.getConnectionUrl(),
-            new Properties() {{
-              if (clientConfig.isIntegratedSecurityEnabled()) {
-                put("integratedSecurity", "true");
-              } else {
-                put("user", requireNonNull(clientConfig.getUser(), "sqlserver.user is null"));
-                put("password", requireNonNull(clientConfig.getPassword(), "sqlserver.password is null"));
-              }
-
-              if (clientConfig.getAuthenticationScheme() != null) {
-                put("authenticationScheme", clientConfig.getAuthenticationScheme());
-              }
-
-              if (clientConfig.getSelectMethod() != null) {
-                put("selectMethod", clientConfig.getSelectMethod());
-              }
-            }});
+    this(config.getConnectionUrl(), getDriverProperties(clientConfig));
   }
 
   @Override
@@ -57,5 +41,36 @@ public class DriverConnectionFactory
           throws SQLException
   {
     return driver.connect(connectionUrl, connectionProperties);
+  }
+
+  private static Properties getDriverProperties(SqlServerClientConfig clientConfig)
+  {
+      return new Properties() {{
+          if (clientConfig.isIntegratedSecurityEnabled()) {
+              put("integratedSecurity", "true");
+          } else {
+              put("user", requireNonNull(clientConfig.getUser(), "sqlserver.user is null"));
+              put("password", requireNonNull(clientConfig.getPassword(), "sqlserver.password is null"));
+          }
+
+          if (clientConfig.getAuthenticationScheme() != null) {
+              put("authenticationScheme", clientConfig.getAuthenticationScheme());
+          }
+
+          if (clientConfig.getSelectMethod() != null) {
+              put("selectMethod", clientConfig.getSelectMethod());
+          }
+
+          put("encrypt", String.valueOf(clientConfig.isEncryptEnabled()));
+          put("trustServerCertificate", String.valueOf(clientConfig.isTrustServerCertificate()));
+
+          if (clientConfig.getLoginTimeout() > 0) {
+              put("loginTimeout", String.valueOf(clientConfig.getLoginTimeout()));
+          }
+
+          if (clientConfig.getHostNameInCertificate() != null) {
+              put("hostNameInCertificate", clientConfig.getHostNameInCertificate());
+          }
+      }};
   }
 }

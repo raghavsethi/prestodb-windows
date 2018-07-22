@@ -23,8 +23,9 @@ public class LeaderElectionConfig
         extends HttpServerConfig
 {
   private String leaderElectionPath = "/skydrill/runtime/coordinator";
-  private String workerRuntimPath = "/skydrill/runtime/worker";
+  private String workerRuntimePath = "/skydrill/runtime/worker";
   private int pullingInterval = 60;
+  private boolean failFastEnabled = true;
 
   public String getLeaderElectionPath() {
     return leaderElectionPath;
@@ -37,12 +38,12 @@ public class LeaderElectionConfig
   }
 
   public String getWorkerRuntimePath() {
-    return workerRuntimPath;
+    return workerRuntimePath;
   }
 
   @Config("worker.runtime-path")
   public LeaderElectionConfig setWorkerRuntimePath(String workerRuntimePath) {
-    this.workerRuntimPath = workerRuntimePath;
+    this.workerRuntimePath = workerRuntimePath;
     return this;
   }
 
@@ -53,6 +54,16 @@ public class LeaderElectionConfig
   @Config("leader-election.pulling-interval")
   public LeaderElectionConfig setPullingInterval(int pullingInterval) {
     this.pullingInterval = pullingInterval;
+    return this;
+  }
+
+  public boolean isFailFastEnabled() {
+    return failFastEnabled;
+  }
+
+  @Config("leader-election.failfast-enabled")
+  public LeaderElectionConfig setFailFastEnabled(boolean enabled) {
+    this.failFastEnabled = enabled;
     return this;
   }
 

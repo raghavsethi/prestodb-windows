@@ -28,6 +28,11 @@ public final class TestingSession
         }
 
         @Override
+        public String getPath() {
+            return null;
+        }
+
+        @Override
         public Identity getIdentity()
         {
             return new Identity("user", Optional.empty());

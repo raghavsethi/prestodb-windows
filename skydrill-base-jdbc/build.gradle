@@ -17,7 +17,7 @@ repositories {
 }
 
 dependencies {
-    compile group: 'org.apache.curator', name: 'curator-recipes', version:'2.12.0'
+    compile group: 'org.apache.curator', name: 'curator-recipes', version:"${curatorVersion}"
     compile group: 'io.airlift', name: 'bootstrap', version:"${airliftVersion}"
     compile group: 'io.airlift', name: 'log', version:"${airliftVersion}"
     compile group: 'io.airlift', name: 'configuration', version:"${airliftVersion}"
@@ -47,7 +47,7 @@ exclude(module: 'guice')
     testCompile group: 'com.facebook.presto', name: 'presto-tpch', version:"${prestoVersion}"
     testCompile group: 'io.airlift.tpch', name: 'tpch', version:'0.9'
     testCompile group: 'com.facebook.presto', name: 'presto-tests', version:"${prestoVersion}"
-    testCompile group: 'org.apache.curator', name: 'curator-test', version: '2.12.0'
+    testCompile group: 'org.apache.curator', name: 'curator-test', version:"${curatorVersion}"
 }
 //packaging tests
 task packageTests(type: Jar) {

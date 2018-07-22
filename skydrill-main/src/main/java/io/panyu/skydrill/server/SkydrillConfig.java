@@ -18,9 +18,9 @@ import io.airlift.configuration.Config;
 import java.util.Optional;
 
 public class SkydrillConfig {
-  private static String CoordinatorUriKey = "coordinator.uri";
-  private static String CoordinatorLeaderKey = "coordinator.leader";
-  private static String DiscoveryUriKey = "discovery.uri";
+  private static final String CoordinatorUriKey = "coordinator.uri";
+  private static final String CoordinatorLeaderKey = "coordinator.leader";
+  private static final String DiscoveryUriKey = "discovery.uri";
 
   private boolean zookeeperEnabled = true;
   private String zookeeperConfig = "etc/zookeeper.config";

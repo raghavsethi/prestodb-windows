@@ -13,6 +13,7 @@
  */
 package io.panyu.skydrill.plugin.jdbc;
 
+import com.facebook.presto.metadata.ViewDefinition;
 import com.facebook.presto.plugin.jdbc.JdbcTableHandle;
 import com.facebook.presto.spi.ConnectorSession;
 import com.facebook.presto.spi.ConnectorViewDefinition;
@@ -24,6 +25,7 @@ import com.google.common.collect.ImmutableMap;
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public interface JdbcClient
     extends com.facebook.presto.plugin.jdbc.JdbcClient
@@ -43,5 +45,9 @@ public interface JdbcClient
 
     default Map<SchemaTableName, ConnectorViewDefinition> getViews(ConnectorSession session, SchemaTablePrefix prefix) {
         return ImmutableMap.of();
+    }
+
+    default Optional<ViewDefinition> getViewDefinition(SchemaTableName viewName) {
+        return Optional.empty();
     }
 }

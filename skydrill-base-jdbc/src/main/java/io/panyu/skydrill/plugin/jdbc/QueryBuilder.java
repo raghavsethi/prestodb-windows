@@ -38,7 +38,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import io.airlift.slice.Slice;
-import io.panyu.skydrill.plugin.jdbc.metastore.JdbcMetastore;
 import org.joda.time.DateTimeZone;
 
 import java.sql.Connection;
@@ -117,13 +116,11 @@ public class QueryBuilder
                                       String schema,
                                       String table,
                                       List<JdbcColumnHandle> columns,
-                                      TupleDomain<ColumnHandle> tupleDomain,
-                                      JdbcMetastore metastore)
-            throws SQLException
+                                      TupleDomain<ColumnHandle> tupleDomain) throws SQLException
     {
         StringBuilder sql = new StringBuilder();
         Optional<ViewDefinition> viewDefinition = isNullOrEmpty(schema)? Optional.empty() :
-                metastore.getViewDefinition(new SchemaTableName(schema, table));
+                client.getViewDefinition(new SchemaTableName(schema, table));
 
         String columnNames = columns.stream()
                 .map(JdbcColumnHandle::getColumnName)
@@ -144,8 +141,6 @@ public class QueryBuilder
         } else {
             if (!isNullOrEmpty(catalog)) {
                 sql.append(quote(catalog)).append('.');
-            }
-            if (!isNullOrEmpty(schema)) {
                 sql.append(quote(schema)).append('.');
             }
         }

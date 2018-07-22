@@ -19,6 +19,7 @@ import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.imps.CuratorFrameworkImpl;
 import org.apache.curator.framework.state.ConnectionState;
 import org.apache.curator.framework.state.ConnectionStateListener;
+import org.apache.curator.framework.state.StandardConnectionStateErrorPolicy;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 
 import io.airlift.log.Logger;
@@ -37,6 +38,7 @@ public class SkydrillCurator
   @Inject
   public SkydrillCurator(SkydrillConfig config) throws Exception {
     super(CuratorFrameworkFactory.builder()
+            .connectionStateErrorPolicy(new StandardConnectionStateErrorPolicy())
             .connectString(config.getConnectString())
             .sessionTimeoutMs(config.getSessionTimeoutMs())
             .connectionTimeoutMs(config.getConnectionTimeoutMs())

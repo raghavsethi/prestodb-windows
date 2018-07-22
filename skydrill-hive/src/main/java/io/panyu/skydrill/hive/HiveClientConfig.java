@@ -4,7 +4,6 @@ import com.google.common.base.Splitter;
 import io.airlift.configuration.Config;
 import io.airlift.configuration.ConfigSecuritySensitive;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -15,20 +14,20 @@ public class HiveClientConfig
 {
     private static final Splitter SPLITTER = Splitter.on(',').trimResults().omitEmptyStrings();
 
-    private String adlOAuth2RefeshUrl;
+    private String adlOAuth2RefreshUrl;
     private String adlOAuth2ClientId;
     private String adlOAuth2ClientCredential;
 
     private List<String> azureBlobAccounts = Collections.emptyList();
     private List<String> azureBlobAccountKeys = Collections.emptyList();
 
-    public String getAdlOAuth2RefeshUrl() {
-        return adlOAuth2RefeshUrl;
+    public String getAdlOAuth2RefreshUrl() {
+        return adlOAuth2RefreshUrl;
     }
 
     @Config("adl.oauth2-refresh-url")
-    public HiveClientConfig setAdlOAuth2RefeshUrl(String refeshUrl) {
-        this.adlOAuth2RefeshUrl = refeshUrl;
+    public HiveClientConfig setAdlOAuth2RefreshUrl(String refeshUrl) {
+        this.adlOAuth2RefreshUrl = refeshUrl;
         return this;
     }
 
