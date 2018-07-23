@@ -22,7 +22,9 @@ dependencies {
     compile group: 'com.facebook.presto', name: 'presto-thrift-connector-api', version:"${prestoVersion}"
     compile group: 'com.facebook.swift', name: 'swift-codec', version:'0.15.2'
     compile group: 'com.facebook.swift', name: 'swift-service', version:'0.15.2'
-    compile group: 'org.apache.curator', name: 'curator-recipes', version:"${curatorVersion}"
+    compile (group: 'org.apache.curator', name: 'curator-recipes', version:"${curatorVersion}") {
+        exclude(module: 'zookeeper')
+    }
     compile group: 'org.apache.zookeeper', name: 'zookeeper', version:"${zookeeperVersion}"
     compile group: 'com.googlecode.json-simple', name: 'json-simple', version:'1.1'
     compile group: 'org.eclipse.jetty', name: 'jetty-proxy', version: '9.4.11.v20180605'

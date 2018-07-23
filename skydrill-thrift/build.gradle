@@ -14,7 +14,10 @@ repositories {
 
 dependencies {
     compile project(':skydrill-base-jdbc')
-    compile group: 'org.apache.curator', name: 'curator-recipes', version:"${curatorVersion}"
+    compile(group: 'org.apache.curator', name: 'curator-recipes', version:"${curatorVersion}") {
+        exclude(module: 'zookeeper')
+    }
+    compile group: 'org.apache.zookeeper', name: 'zookeeper', version:"${zookeeperVersion}"
     compile group: 'com.facebook.presto', name: 'presto-thrift-connector-api', version:"${prestoVersion}"
     compile group: 'com.facebook.presto', name: 'presto-thrift-connector', version:"${prestoVersion}"
     compile group: 'io.airlift.drift', name: 'drift-api', version:'1.12'
