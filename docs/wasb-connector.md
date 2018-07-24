@@ -8,8 +8,7 @@ Create etc/catalog/blob.properties with the following contents to mount the skyd
 
     connector.name=skydrill-hive
     hive.metastore=blob
-    hive.metastore.container=mycontainer@myblobstorageaccount
-    hive.metastore.catalog-dir=/catalog
+    hive.metastore.catalog-dir=wasbs://mycontainer@myblobaccount.blob.core.windows.net/mydatabase/catalog
     azure-blob.accounts=myblobstorageaccount,myblobstorageaccount1,myblobstorageaccount2
     azure-blob.account-keys=account1accesskey,account2accesskey,account3accesskey
 

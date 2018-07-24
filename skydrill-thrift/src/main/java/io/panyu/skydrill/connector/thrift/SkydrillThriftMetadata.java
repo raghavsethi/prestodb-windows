@@ -6,6 +6,7 @@ import com.facebook.presto.connector.thrift.ThriftMetadata;
 import com.facebook.presto.connector.thrift.ThriftTableHandle;
 import com.facebook.presto.connector.thrift.annotations.ForMetadataRefresh;
 import com.facebook.presto.metadata.ViewDefinition;
+import com.facebook.presto.plugin.jdbc.JdbcTableHandle;
 import com.facebook.presto.spi.ColumnHandle;
 import com.facebook.presto.spi.ConnectorSession;
 import com.facebook.presto.spi.ConnectorTableHandle;
@@ -28,6 +29,7 @@ import static io.panyu.skydrill.plugin.jdbc.JdbcSessionProperties.isViewPushdown
 public class SkydrillThriftMetadata
         extends ThriftMetadata
 {
+    private static final String PD_HINT_TOKEN = "_";
     private final SkydrillThriftClient client;
 
     @Inject
@@ -55,10 +57,10 @@ public class SkydrillThriftMetadata
     @Override
     public ConnectorTableHandle getTableHandle(ConnectorSession session, SchemaTableName tableName)
     {
-        if (isViewPushdownEnabled(session)) {
-            Optional<String> viewData = client.getViewData(tableName);
+        if (isViewPushdownEnabled(session) || containsHint(tableName)) {
+            Optional<String> viewData = client.getViewData(getCanonicalTableName(tableName));
             if (viewData.isPresent()) {
-                return new ThriftTableHandle(tableName);
+                return new ThriftTableHandle(getCanonicalTableName(tableName));
             }
         }
         return super.getTableHandle(session, tableName);
@@ -67,10 +69,10 @@ public class SkydrillThriftMetadata
     @Override
     public Map<String, ColumnHandle> getColumnHandles(ConnectorSession session, ConnectorTableHandle tableHandle)
     {
-        if (isViewPushdownEnabled(session)) {
-            ThriftTableHandle handle = ((ThriftTableHandle) tableHandle);
-            Optional<ViewDefinition> viewDefinition = 
-                    client.getViewDefinition(new SchemaTableName(handle.getSchemaName(), handle.getTableName()));
+        ThriftTableHandle handle = ((ThriftTableHandle) tableHandle);
+        if (isViewPushdownEnabled(session) || containsHint(handle)) {
+            Optional<ViewDefinition> viewDefinition =
+                    client.getViewDefinition(getCanonicalTableName(handle));
             if (viewDefinition.isPresent()) {
                 return viewDefinition.get().getColumns().stream()
                         .collect(toImmutableMap(ViewDefinition.ViewColumn::getName,
@@ -101,7 +103,7 @@ public class SkydrillThriftMetadata
     @Override
     public Map<SchemaTableName, ConnectorViewDefinition> getViews(ConnectorSession session, SchemaTablePrefix prefix)
     {
-        if (isViewPushdownEnabled(session)) {
+        if (isViewPushdownEnabled(session) || containsHint(prefix.getTableName())) {
             return ImmutableMap.of();
         }
 
@@ -121,6 +123,32 @@ public class SkydrillThriftMetadata
         }
 
         return views.build();
+    }
+
+    private boolean containsHint(ThriftTableHandle tableHandle) {
+        return containsHint(tableHandle.getTableName());
+    }
+
+    private boolean containsHint(SchemaTableName schemaTableName) {
+        return containsHint(schemaTableName.getTableName());
+    }
+
+    private boolean containsHint(String tableName) {
+        return tableName.endsWith(PD_HINT_TOKEN);
+    }
+
+    private SchemaTableName getCanonicalTableName(ThriftTableHandle tableHandle) {
+        return new SchemaTableName(tableHandle.getSchemaName(), getCanonicalTableName(tableHandle.getTableName()));
+    }
+
+    private SchemaTableName getCanonicalTableName(SchemaTableName schemaTableName) {
+        if (!containsHint(schemaTableName))
+            return schemaTableName;
+        return new SchemaTableName(schemaTableName.getSchemaName(), getCanonicalTableName(schemaTableName.getTableName()));
+    }
+
+    private String getCanonicalTableName(String tableName) {
+        return containsHint(tableName)? tableName.substring(0, tableName.length() - 1): tableName;
     }
 
 }

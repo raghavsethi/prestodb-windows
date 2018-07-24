@@ -7,4 +7,4 @@ Skydrill Documentation
 - [Sharded SQL Connector](./stripe-connector.md)
 - [Managing Table Partitions](./hive-partition.md)
 - [Dynamic Catalog APIs](./catalog-api.md)
-- [Aggregation Push-down](./view-pushdown.md)
+- [View Push-down](./view-pushdown.md)
