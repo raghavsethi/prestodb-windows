@@ -5,10 +5,10 @@ Distribution of Apache Presto for Microsoft Windows.
 ### Features
 
 - Coordinator High Availability (HA)
-- Azure Blob and DataLake Connectors
+- Azure Blob and Data Lake Connectors
 - Sharded SQL (JDBC) Connector
-- Dynamic Catalog
-- View Push-down
+- Dynamic Catalog APIs
+- View Push-down (JDBC and Thrift)
 - Windows Hosting
 
 ### Resources

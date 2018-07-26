@@ -12,7 +12,6 @@ public class AdlsMetastoreConfig
     private String account;
     private String catalogDirectory = "/catalog";
 
-    @NotNull
     public String getAccount() {
         return account;
     }

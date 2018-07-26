@@ -265,7 +265,7 @@ public class HivePartitionUtils {
         });
     }
 
-    private void addPartition(ExtendedHiveMetastore store,
+    protected void addPartition(ExtendedHiveMetastore store,
                               String databaseName,
                               String tableName,
                               String partitionValue)
@@ -302,7 +302,7 @@ public class HivePartitionUtils {
                 seedParameters);
     }
 
-    private void dropPartition(ExtendedHiveMetastore store,
+    protected void dropPartition(ExtendedHiveMetastore store,
                                String databaseName,
                                String tableName,
                                String partitionValue)

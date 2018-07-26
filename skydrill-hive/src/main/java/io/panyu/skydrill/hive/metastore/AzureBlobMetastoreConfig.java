@@ -12,7 +12,6 @@ public class AzureBlobMetastoreConfig
     private String container;
     private String catalogDirectory = "/catalog";
 
-    @NotNull
     public String getContainer() {
         return container;
     }
