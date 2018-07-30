@@ -17,7 +17,7 @@ Make a POST request to /v1/cat/load with the name of the new catalog and content
 
 Example:
 
-    curl -d @tpcds.properties http://localhost:8080/v1/cat/load?catalog=tpcds
+    curl --data-binary @tpcds.properties http://localhost:8080/v1/cat/load?catalog=tpcds
     /skydrill/runtime/catalog/tpcds
 
 Content of `tpcds.properties`

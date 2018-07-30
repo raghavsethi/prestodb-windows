@@ -17,6 +17,8 @@ import com.facebook.presto.connector.ConnectorManager;
 import com.facebook.presto.metadata.Catalog;
 import com.facebook.presto.metadata.CatalogManager;
 import com.google.common.collect.ImmutableMap;
+import io.airlift.discovery.client.Announcer;
+import io.airlift.discovery.client.ServiceAnnouncement;
 import io.airlift.log.Logger;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.api.CuratorWatcher;
@@ -32,8 +34,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static com.google.common.collect.MoreCollectors.onlyElement;
+import static io.airlift.discovery.client.ServiceAnnouncement.ServiceAnnouncementBuilder;
+import static io.airlift.discovery.client.ServiceAnnouncement.serviceAnnouncement;
 import static java.util.Objects.requireNonNull;
 import static com.google.common.collect.Maps.fromProperties;
 import static io.panyu.skydrill.server.SkydrillConfig.hasCoordinatorLeadership;
@@ -45,6 +51,7 @@ public class CatalogStore
 
     private final ConnectorManager connectorManager;
     private final CatalogManager catalogManager;
+    private final Announcer announcer;
     private final CatalogStoreConfig config;
     private final CuratorFramework curator;
     private final String catalogRootPath;
@@ -52,10 +59,12 @@ public class CatalogStore
     @Inject
     public CatalogStore(ConnectorManager connectorManager,
                         CatalogManager catalogManager,
+                        Announcer announcer,
                         CatalogStoreConfig config,
                         CuratorFramework curator) {
         this.connectorManager = requireNonNull(connectorManager, "connectorManager is null");
         this.catalogManager = requireNonNull(catalogManager, "catalogManager is null");
+        this.announcer = requireNonNull(announcer, "announcer is null");
         this.config = requireNonNull(config, "CatalogStoreConfig is null");
         this.curator = requireNonNull(curator, "curator is null");
         this.catalogRootPath = requireNonNull(config.getCatalogRootPath(), "catalog root is null");
@@ -78,11 +87,17 @@ public class CatalogStore
             if (forSubscribers) {
                 bytes.ifPresent(x -> {
                     String nodeData = new String(x);
+                    String catalogName = nodeData.substring(1);
                     if (nodeData.startsWith("+")) {
-                        loadCatalog(nodeData.substring(1));
+                        try {
+                            loadCatalog(catalogName);
+                            announceUpdate(catalogName);
+                        } catch (Exception e) {
+                            log.error(e);
+                        }
                     }
                     if (nodeData.startsWith("-")) {
-                        dropCatalog(nodeData.substring(1));
+                        dropCatalog(catalogName);
                     }
                 });
             }
@@ -113,6 +128,7 @@ public class CatalogStore
 
                 if (forPublishing) {
                     curator.setData().forPath(catalogRootPath, ("+" + catalogName).getBytes());
+                    announceUpdate(catalogName);
                 }
             }
         } catch (Exception e) {
@@ -141,5 +157,24 @@ public class CatalogStore
     public List<String> getCatalogs() {
         return catalogManager.getCatalogs().stream().map(Catalog::getCatalogName)
                 .collect(Collectors.toList());
+    }
+
+    private void announceUpdate(String connectorId) throws Exception {
+        ServiceAnnouncement announcement = announcer.getServiceAnnouncements().stream()
+                .filter(x -> x.getType().equals("presto"))
+                .collect(onlyElement());
+        String connectorIds = announcement.getProperties().get("connectorIds");
+
+        ServiceAnnouncementBuilder builder = serviceAnnouncement(announcement.getType());
+        for (Map.Entry<String, String> entry : announcement.getProperties().entrySet()) {
+            if (!entry.getKey().equals("connectorIds")) {
+                builder.addProperty(entry.getKey(), entry.getValue());
+            }
+        }
+        builder.addProperty("connectorIds", String.format("%s,%s", connectorIds, connectorId));
+
+        announcer.removeServiceAnnouncement(announcement.getId());
+        announcer.addServiceAnnouncement(builder.build());
+        announcer.forceAnnounce().get(30, TimeUnit.SECONDS);
     }
 }
