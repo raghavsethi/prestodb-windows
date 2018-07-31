@@ -38,7 +38,9 @@ import static com.facebook.presto.spi.type.TimeType.TIME;
 import static com.facebook.presto.spi.type.TimestampType.TIMESTAMP;
 import static com.facebook.presto.spi.type.TinyintType.TINYINT;
 import static com.facebook.presto.spi.type.VarbinaryType.VARBINARY;
+import static io.panyu.skydrill.plugin.jdbc.JdbcMetadata.containsHint;
 import static io.panyu.skydrill.plugin.jdbc.JdbcSessionProperties.isViewPushdownEnabled;
+import static io.panyu.skydrill.plugin.jdbc.JdbcMetadata.getCanonicalTableName;
 
 public class BaseJdbcClient
         extends com.facebook.presto.plugin.jdbc.BaseJdbcClient
@@ -82,15 +84,16 @@ public class BaseJdbcClient
   @Nullable
   @Override
   public JdbcTableHandle getTableHandle(ConnectorSession session, SchemaTableName schemaTableName) {
-    if ((session != null) && isViewPushdownEnabled(session)) {
-      Optional<String> viewData = metastore.getViewData(schemaTableName);
+    if (((session != null) && isViewPushdownEnabled(session)) || (containsHint(schemaTableName))) {
+      SchemaTableName tableName = getCanonicalTableName(schemaTableName);
+      Optional<String> viewData = metastore.getViewData(tableName);
       if (viewData.isPresent()) {
         return new JdbcTableHandle(
                 connectorId,
-                schemaTableName,
+                tableName,
                 connectorId,
-                schemaTableName.getSchemaName(),
-                schemaTableName.getTableName());
+                tableName.getSchemaName(),
+                tableName.getTableName());
       }
     }
     return super.getTableHandle(schemaTableName);
@@ -98,7 +101,7 @@ public class BaseJdbcClient
 
   @Override
   public List<JdbcColumnHandle> getColumns(ConnectorSession session, JdbcTableHandle tableHandle) {
-    if (isViewPushdownEnabled(session)) {
+    if (isViewPushdownEnabled(session) || isView(tableHandle)) {
       Optional<ViewDefinition> viewDefinition = metastore.getViewDefinition(tableHandle.getSchemaTableName());
       if (viewDefinition.isPresent()) {
         return viewDefinition.get().getColumns().stream()
@@ -139,7 +142,7 @@ public class BaseJdbcClient
 
   @Override
   public Map<SchemaTableName, ConnectorViewDefinition> getViews(ConnectorSession session, SchemaTablePrefix prefix) {
-    if (isViewPushdownEnabled(session)) {
+    if (isViewPushdownEnabled(session) || containsHint(prefix)) {
       return ImmutableMap.of();
     }
 
@@ -203,5 +206,9 @@ public class BaseJdbcClient
     }
 
     throw new RuntimeException("unsupported column type " + column.toString());
+  }
+
+  private boolean isView(JdbcTableHandle tableHandle) {
+      return metastore.isView(tableHandle.getSchemaTableName());
   }
 }

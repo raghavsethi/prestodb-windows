@@ -21,4 +21,6 @@ public interface JdbcMetastore extends Cloneable {
   Optional<String> getViewData(SchemaTableName viewName);
 
   Optional<ViewDefinition> getViewDefinition(SchemaTableName viewName);
+
+  boolean isView(SchemaTableName schemaTableName);
 }

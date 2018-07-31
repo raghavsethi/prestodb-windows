@@ -134,6 +134,7 @@ public class ZkJdbcMetastore
     return getViewData(viewName).map(viewCodec::fromJson);
   }
 
+  @Override
   public boolean isView(SchemaTableName viewName){
     try{
       String viewPath = getPathString(viewRootPath, viewName);

@@ -5,6 +5,8 @@ import io.airlift.configuration.Config;
 public class BaseJdbcConfig
         extends com.facebook.presto.plugin.jdbc.BaseJdbcConfig {
 
+    public static final String PD_SUFFIX = "_";
+    
     private boolean viewPushdownEnabled = false;
 
     public boolean isViewPushdownEnabled() {
