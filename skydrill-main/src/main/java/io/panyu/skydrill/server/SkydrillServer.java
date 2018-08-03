@@ -19,6 +19,9 @@ import com.facebook.presto.execution.resourceGroups.ResourceGroupManager;
 import com.facebook.presto.execution.scheduler.NodeSchedulerConfig;
 import com.facebook.presto.metadata.Catalog;
 import com.facebook.presto.metadata.CatalogManager;
+import com.facebook.presto.metadata.FunctionListBuilder;
+import com.facebook.presto.metadata.MetadataManager;
+import com.facebook.presto.metadata.SqlFunction;
 import com.facebook.presto.metadata.StaticCatalogStore;
 import com.facebook.presto.security.AccessControlManager;
 import com.facebook.presto.security.AccessControlModule;
@@ -53,6 +56,9 @@ import io.panyu.skydrill.discovery.DiscoveryModule;
 import io.panyu.skydrill.election.LeaderElection;
 import io.panyu.skydrill.election.LeaderElectionWatcher;
 import io.panyu.skydrill.metadata.CatalogStore;
+import io.panyu.skydrill.operator.aggregation.DefaultHyperLogLogAggregation;
+import io.panyu.skydrill.operator.aggregation.HyperLogLogAggregation;
+import io.panyu.skydrill.operator.scalar.QuantileDigestFunctions;
 import io.panyu.skydrill.proxy.HttpProxyServer;
 import org.weakref.jmx.guice.MBeanModule;
 
@@ -119,9 +125,16 @@ public class SkydrillServer implements Runnable {
         modules.addAll(getAdditionalModules());
         Bootstrap app = new Bootstrap(modules.build());
 
+        List<SqlFunction> functions = new FunctionListBuilder()
+                .aggregate(HyperLogLogAggregation.class)
+                .aggregate(DefaultHyperLogLogAggregation.class)
+                .scalars(QuantileDigestFunctions.class)
+                .getFunctions();
+
         try {
             Injector injector = app.strictConfig().initialize();
             injector.getInstance(PluginManager.class).loadPlugins();
+            injector.getInstance(MetadataManager.class).addFunctions(functions);
             injector.getInstance(StaticCatalogStore.class).loadCatalogs();
             injector.getInstance(CatalogStore.class).loadCatalogs();
 
