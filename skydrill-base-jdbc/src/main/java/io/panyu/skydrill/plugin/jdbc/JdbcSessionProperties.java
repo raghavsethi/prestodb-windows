@@ -7,7 +7,7 @@ import com.google.inject.Inject;
 
 import java.util.List;
 
-import static com.facebook.presto.spi.session.PropertyMetadata.booleanSessionProperty;
+import static com.facebook.presto.spi.session.PropertyMetadata.booleanProperty;
 
 public class JdbcSessionProperties {
     private static final String VIEW_PUSHDOWN_ENABLED = "view_pushdown_enabled";
@@ -17,7 +17,7 @@ public class JdbcSessionProperties {
     @Inject
     public JdbcSessionProperties(BaseJdbcConfig config) {
         sessionProperties = ImmutableList.of(
-                booleanSessionProperty(
+                booleanProperty(
                         VIEW_PUSHDOWN_ENABLED,
                         "Enable view to execute at the connector",
                         config.isViewPushdownEnabled(),

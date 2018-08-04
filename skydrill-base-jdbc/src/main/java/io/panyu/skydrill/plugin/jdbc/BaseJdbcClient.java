@@ -170,7 +170,7 @@ public class BaseJdbcClient
     return metastore.getViewDefinition(viewName);
   }
 
-  protected JdbcColumnHandle makeJdbcColumnHandle(String connectorId, ViewDefinition.ViewColumn column) {
+  private JdbcColumnHandle makeJdbcColumnHandle(String connectorId, ViewDefinition.ViewColumn column) {
     switch (column.getType().getDisplayName()) {
       case "boolean":
         return new JdbcColumnHandle(connectorId, column.getName(), new JdbcTypeHandle(Types.BOOLEAN, 1, 0), BOOLEAN);

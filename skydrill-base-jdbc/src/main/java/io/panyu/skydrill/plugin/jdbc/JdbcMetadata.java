@@ -14,6 +14,7 @@ import com.facebook.presto.spi.ConnectorViewDefinition;
 import com.facebook.presto.spi.Constraint;
 import com.facebook.presto.spi.SchemaTableName;
 import com.facebook.presto.spi.SchemaTablePrefix;
+import com.google.common.collect.ImmutableList;
 
 import java.util.List;
 import java.util.Map;
@@ -74,8 +75,8 @@ public class JdbcMetadata
   }
 
   @Override
-  public List<SchemaTableName> listViews(ConnectorSession session, String schema) {
-    return jdbcClient.listViews(session, schema);
+  public List<SchemaTableName> listViews(ConnectorSession session, Optional<String> schema) {
+    return schema.map(s -> jdbcClient.listViews(session, s)).orElseGet(ImmutableList::of);
   }
 
   @Override

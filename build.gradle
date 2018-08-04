@@ -2,9 +2,9 @@ description = 'skydrill-presto'
 group = 'io.panyu.skydrill'
 
 allprojects {
-  version = "0.206"
+  version = "0.207"
   ext.prestoVersion = "${version}"
-  ext.airliftVersion = "0.171"
+  ext.airliftVersion = "0.172"
   ext.curatorVersion = "4.0.1"
   ext.zookeeperVersion = "3.4.12"
 }

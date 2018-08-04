@@ -47,7 +47,7 @@ public class SkydrillThriftMetadata
     {
         if (isViewPushdownEnabled(session)) {
             ImmutableList.Builder<SchemaTableName> builder = new ImmutableList.Builder<>();
-            return builder.addAll(listViews(session, schema))
+            return builder.addAll(listViews(session, Optional.of(schema)))
                     .addAll(super.listTables(session, schema))
                     .build();
         }
@@ -95,9 +95,9 @@ public class SkydrillThriftMetadata
     }
 
     @Override
-    public List<SchemaTableName> listViews(ConnectorSession session, String schema)
+    public List<SchemaTableName> listViews(ConnectorSession session, Optional<String> schema)
     {
-        return client.listViews(session, schema);
+        return schema.map(s -> client.listViews(session, s)).orElseGet(ImmutableList::of);
     }
 
     @Override
@@ -113,7 +113,7 @@ public class SkydrillThriftMetadata
             tableNames = ImmutableList.of(new SchemaTableName(prefix.getSchemaName(), prefix.getTableName()));
         }
         else {
-            tableNames = listViews(session, prefix.getSchemaName());
+            tableNames = listViews(session, Optional.of(prefix.getSchemaName()));
         }
 
         for (SchemaTableName schemaTableName : tableNames) {

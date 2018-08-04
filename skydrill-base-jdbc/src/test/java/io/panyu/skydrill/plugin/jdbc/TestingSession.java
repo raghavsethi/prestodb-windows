@@ -7,7 +7,7 @@ import com.facebook.presto.spi.type.TimeZoneKey;
 import java.util.Locale;
 import java.util.Optional;
 
-import static com.facebook.presto.spi.session.PropertyMetadata.booleanSessionProperty;
+import static com.facebook.presto.spi.session.PropertyMetadata.booleanProperty;
 import static com.facebook.presto.spi.type.TimeZoneKey.UTC_KEY;
 import static java.util.Locale.ENGLISH;
 
@@ -78,7 +78,7 @@ public final class TestingSession
         @SuppressWarnings("unchecked")
         public <T> T getProperty(String name, Class<T> type)
         {
-            return (T) booleanSessionProperty(
+            return (T) booleanProperty(
                     "view_pushdown_enabled",
                     "Enable view to execute at the connector",
                     false,

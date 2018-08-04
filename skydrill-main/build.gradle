@@ -25,7 +25,10 @@ dependencies {
     compile (group: 'org.apache.curator', name: 'curator-recipes', version:"${curatorVersion}") {
         exclude(module: 'zookeeper')
     }
-    compile group: 'org.apache.zookeeper', name: 'zookeeper', version:"${zookeeperVersion}"
+    compile (group: 'org.apache.zookeeper', name: 'zookeeper', version:"${zookeeperVersion}") {
+        exclude(module: 'log4j-over-slf4j')
+        exclude(module: 'slf4j-log4j12')
+    }
     compile group: 'com.googlecode.json-simple', name: 'json-simple', version:'1.1'
     compile group: 'org.eclipse.jetty', name: 'jetty-proxy', version: '9.4.11.v20180605'
     compile group: 'org.eclipse.jetty', name: 'jetty-servlets', version: '9.4.11.v20180605'
@@ -33,7 +36,15 @@ dependencies {
         exclude(module: 'junit')
         exclude(module: 'guice')
     }
+    testCompile(group: 'com.facebook.presto', name: 'presto-tests', version:"${prestoVersion}")
 }
+
+//packaging tests
+task packageTests(type: Jar) {
+    from sourceSets.test.output
+    classifier = 'tests'
+}
+artifacts.archives packageTests
 
 task makeDistro(type: Copy) {
     into "$buildDir/libs"
