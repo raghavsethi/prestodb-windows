@@ -40,6 +40,9 @@ import javax.inject.Singleton;
 import java.io.FileInputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -48,6 +51,7 @@ import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static com.google.common.collect.Maps.fromProperties;
 import static io.airlift.concurrent.Threads.daemonThreadsNamed;
@@ -57,6 +61,7 @@ import static java.util.concurrent.Executors.newFixedThreadPool;
 
 public class HivePartitionUtils {
     private static final Logger log = Logger.get(HivePartitionUtils.class);
+    private static final Splitter rangeSplitter = Splitter.on('-').trimResults().omitEmptyStrings();
     private static final Splitter nSplitter = Splitter.on(' ').trimResults().omitEmptyStrings();
     private static final Splitter pSplitter = Splitter.on('/').trimResults().omitEmptyStrings();
     private static final Splitter vSplitter = Splitter.on('=').trimResults().omitEmptyStrings();
@@ -242,7 +247,35 @@ public class HivePartitionUtils {
         }
     }
 
-    private void addPartitions(ExtendedHiveMetastore store,
+    protected List<String> getPartitionEntries(String partitionRange, String format) {
+        List<String> range = rangeSplitter.splitToList(partitionRange);
+        if (range.size() != 2)
+            throw new RuntimeException("range needs to have exactly two values, separated by -");
+        return getPartitionEntries(range.get(0), range.get(1), format);
+    }
+
+    protected List<String> getPartitionEntries(String startDateTime, String endDateTime, String format) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
+        LocalDateTime startDate = LocalDateTime.parse(startDateTime, formatter);
+        LocalDateTime endDate = LocalDateTime.parse(endDateTime, formatter);
+
+        return IntStream.iterate(0, i -> i + 1)
+                .limit(ChronoUnit.HOURS.between(startDate, endDate) + 1) // including endDateTime
+                .mapToObj(i -> startDate.plus(i, ChronoUnit.HOURS))
+                .map(x -> x.format(formatter))
+                .collect(ImmutableList.toImmutableList());
+    }
+
+    protected void addPartitions(ExtendedHiveMetastore store,
+                                 String databaseName,
+                                 String tableName,
+                                 String startDateTime,
+                                 String endDateTime,
+                                 String formater) {
+        addPartitions(store, databaseName, tableName, getPartitionEntries(startDateTime, endDateTime, formater));
+    }
+
+    protected void addPartitions(ExtendedHiveMetastore store,
                                String databaseName,
                                String tableName,
                                List<String> partitionEntries)
