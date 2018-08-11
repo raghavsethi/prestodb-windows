@@ -58,6 +58,8 @@ import io.panyu.skydrill.election.LeaderElectionWatcher;
 import io.panyu.skydrill.metadata.CatalogStore;
 import io.panyu.skydrill.operator.aggregation.DefaultHyperLogLogAggregation;
 import io.panyu.skydrill.operator.aggregation.HyperLogLogAggregation;
+import io.panyu.skydrill.operator.aggregation.MergeQuantileDigestAggregation;
+import io.panyu.skydrill.operator.aggregation.QuantileDigestAggregation;
 import io.panyu.skydrill.operator.scalar.QuantileDigestFunctions;
 import io.panyu.skydrill.proxy.HttpProxyServer;
 import org.weakref.jmx.guice.MBeanModule;
@@ -128,6 +130,8 @@ public class SkydrillServer implements Runnable {
         List<SqlFunction> functions = new FunctionListBuilder()
                 .aggregate(HyperLogLogAggregation.class)
                 .aggregate(DefaultHyperLogLogAggregation.class)
+                .aggregate(MergeQuantileDigestAggregation.class)
+                .aggregates(QuantileDigestAggregation.class)
                 .scalars(QuantileDigestFunctions.class)
                 .getFunctions();
 
