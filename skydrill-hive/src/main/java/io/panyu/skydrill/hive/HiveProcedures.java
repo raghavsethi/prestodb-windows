@@ -9,6 +9,7 @@ import com.google.inject.Inject;
 import io.airlift.log.Logger;
 
 import java.lang.invoke.MethodHandle;
+import java.util.HashSet;
 import java.util.Set;
 
 import static com.facebook.presto.spi.block.MethodHandleUtil.methodHandle;
@@ -24,6 +25,7 @@ public class HiveProcedures {
     private final ClassLoader classLoader;
     private final ExtendedHiveMetastore metastore;
     private final HivePartitionUtils utils;
+    private final Set<Procedure> procedures;
 
     @Inject
     public HiveProcedures(ExtendedHiveMetastore metastore,
@@ -31,6 +33,7 @@ public class HiveProcedures {
         this.metastore = requireNonNull(metastore, "metastore is null");
         this.classLoader = requireNonNull(classLoader, "classLoader is null");
         this.utils = new HivePartitionUtils();
+        this.procedures = new HashSet<>();
     }
 
     public void addPartition(String databaseName, String tableName, String partitionValue) {
@@ -54,30 +57,38 @@ public class HiveProcedures {
         }
     }
 
+    HiveProcedures addProcedure(Procedure procedure) {
+        procedures.add(procedure);
+        return this;
+    }
+
     Set<Procedure> getProcedures() {
-        return ImmutableSet.of(
-            new Procedure("schema", "add_partition",
-                    ImmutableList.<Procedure.Argument>builder()
-                            .add(new Procedure.Argument("database", VARCHAR))
-                            .add(new Procedure.Argument("table", VARCHAR))
-                            .add(new Procedure.Argument("partition", VARCHAR))
-                            .build(),
-                    ADD_PARTITION.bindTo(this)),
-            new Procedure("schema", "add_partitions",
-                    ImmutableList.<Procedure.Argument>builder()
-                            .add(new Procedure.Argument("database", VARCHAR))
-                            .add(new Procedure.Argument("table", VARCHAR))
-                            .add(new Procedure.Argument("startDateTime", VARCHAR))
-                            .add(new Procedure.Argument("endDateTime", VARCHAR))
-                            .add(new Procedure.Argument("format", VARCHAR))
-                            .build(),
-                    ADD_PARTITIONS.bindTo(this)),
-            new Procedure("schema", "drop_partition",
-                    ImmutableList.<Procedure.Argument>builder()
-                            .add(new Procedure.Argument("database", VARCHAR))
-                            .add(new Procedure.Argument("table", VARCHAR))
-                            .add(new Procedure.Argument("partition", VARCHAR))
-                            .build(),
-                    DROP_PARTITION.bindTo(this)));
+        procedures.add(
+                new Procedure("schema", "add_partition",
+                        ImmutableList.<Procedure.Argument>builder()
+                                .add(new Procedure.Argument("database", VARCHAR))
+                                .add(new Procedure.Argument("table", VARCHAR))
+                                .add(new Procedure.Argument("partition", VARCHAR))
+                                .build(),
+                        ADD_PARTITION.bindTo(this)));
+        procedures.add(
+                new Procedure("schema", "add_partitions",
+                        ImmutableList.<Procedure.Argument>builder()
+                                .add(new Procedure.Argument("database", VARCHAR))
+                                .add(new Procedure.Argument("table", VARCHAR))
+                                .add(new Procedure.Argument("startDateTime", VARCHAR))
+                                .add(new Procedure.Argument("endDateTime", VARCHAR))
+                                .add(new Procedure.Argument("format", VARCHAR))
+                                .build(),
+                        ADD_PARTITIONS.bindTo(this)));
+        procedures.add(
+                new Procedure("schema", "drop_partition",
+                        ImmutableList.<Procedure.Argument>builder()
+                                .add(new Procedure.Argument("database", VARCHAR))
+                                .add(new Procedure.Argument("table", VARCHAR))
+                                .add(new Procedure.Argument("partition", VARCHAR))
+                                .build(),
+                        DROP_PARTITION.bindTo(this)));
+        return ImmutableSet.copyOf(procedures);
     }
 }

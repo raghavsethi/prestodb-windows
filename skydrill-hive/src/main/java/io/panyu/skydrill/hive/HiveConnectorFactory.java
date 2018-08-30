@@ -1,5 +1,6 @@
 package io.panyu.skydrill.hive;
 
+import com.facebook.presto.hive.CreateEmptyPartitionProcedure;
 import com.facebook.presto.hive.HiveHandleResolver;
 import com.facebook.presto.hive.HiveMetadataFactory;
 import com.facebook.presto.hive.HiveSchemaProperties;
@@ -31,7 +32,6 @@ import com.facebook.presto.spi.connector.classloader.ClassLoaderSafeConnectorSpl
 import com.facebook.presto.spi.connector.classloader.ClassLoaderSafeNodePartitioningProvider;
 import com.facebook.presto.spi.procedure.Procedure;
 import com.facebook.presto.spi.type.TypeManager;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Injector;
 import com.google.inject.Scopes;
@@ -42,13 +42,10 @@ import io.airlift.json.JsonModule;
 import org.weakref.jmx.guice.MBeanModule;
 
 import javax.management.MBeanServer;
-import java.lang.invoke.MethodHandle;
 import java.lang.management.ManagementFactory;
 import java.util.Map;
 import java.util.Set;
 
-import static com.facebook.presto.spi.block.MethodHandleUtil.methodHandle;
-import static com.facebook.presto.spi.type.StandardTypes.VARCHAR;
 import static com.google.common.base.Throwables.throwIfUnchecked;
 import static java.util.Objects.requireNonNull;
 
@@ -95,6 +92,7 @@ public class HiveConnectorFactory
                         binder.bind(PageSorter.class).toInstance(context.getPageSorter());
                         binder.bind(ClassLoader.class).toInstance(classLoader);
                         binder.bind(HiveProcedures.class).in(Scopes.SINGLETON);
+                        binder.bind(CreateEmptyPartitionProcedure.class).in(Scopes.SINGLETON);
                     });
 
             Injector injector = app
@@ -113,7 +111,9 @@ public class HiveConnectorFactory
             HiveSessionProperties hiveSessionProperties = injector.getInstance(HiveSessionProperties.class);
             HiveTableProperties hiveTableProperties = injector.getInstance(HiveTableProperties.class);
             ConnectorAccessControl accessControl = new PartitionsAwareAccessControl(injector.getInstance(ConnectorAccessControl.class));
-            Set<Procedure> procedureSet = injector.getInstance(HiveProcedures.class).getProcedures();
+            Procedure createEmptyPartitionProcedure = injector.getInstance(CreateEmptyPartitionProcedure.class).get();
+            HiveProcedures hiveProcedures = injector.getInstance(HiveProcedures.class);
+            Set<Procedure> procedureSet = hiveProcedures.addProcedure(createEmptyPartitionProcedure).getProcedures();
 
             return new HiveConnector(
                     lifeCycleManager,

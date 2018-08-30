@@ -46,6 +46,7 @@ public class HiveConnector
                 pageSinkProvider,
                 nodePartitioningProvider,
                 systemTables,
+                procedures,
                 sessionProperties,
                 schemaProperties,
                 tableProperties,
