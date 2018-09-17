@@ -3,14 +3,17 @@ package io.panyu.skydrill.hive;
 import com.facebook.presto.hive.ForCachingHiveMetastore;
 import com.facebook.presto.hive.HdfsConfiguration;
 import com.facebook.presto.hive.HdfsEnvironment;
+import com.facebook.presto.hive.HiveBasicStatistics;
 import com.facebook.presto.hive.HiveConnectorId;
 import com.facebook.presto.hive.HiveHdfsConfiguration;
+import com.facebook.presto.hive.PartitionStatistics;
 import com.facebook.presto.hive.authentication.HdfsAuthentication;
 import com.facebook.presto.hive.authentication.NoHdfsAuthentication;
 import com.facebook.presto.hive.authentication.NoHiveMetastoreAuthentication;
 import com.facebook.presto.hive.metastore.Column;
 import com.facebook.presto.hive.metastore.ExtendedHiveMetastore;
 import com.facebook.presto.hive.metastore.Partition;
+import com.facebook.presto.hive.metastore.PartitionWithStatistics;
 import com.facebook.presto.hive.metastore.Storage;
 import com.facebook.presto.hive.metastore.file.FileHiveMetastore;
 import com.facebook.presto.hive.metastore.thrift.BridgingHiveMetastore;
@@ -25,6 +28,7 @@ import com.facebook.presto.spi.PrestoException;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.inject.Binder;
 import com.google.inject.Injector;
@@ -227,8 +231,8 @@ public class HivePartitionUtils {
             throw new RuntimeException("not a hive catalog");
 
         String type = connectorName.equals("skydrill-hive")?
-                properties.getProperty("hive.metastore.type", "blob") :
-                properties.getProperty("hive.metastore.type", "thrift");
+                properties.getProperty("hive.metastore", "blob") :
+                properties.getProperty("hive.metastore", "thrift");
 
         properties.remove("connector.name");
         String connectorId = nsSplitter.splitToList(catalogProperties).get(0);
@@ -316,15 +320,15 @@ public class HivePartitionUtils {
                 seed.getSerdeParameters());
     }
 
-    private Partition makePartition(String databaseName,
-                                    String tableName,
-                                    String partitionEntry,
-                                    Storage seedStorage,
-                                    List<Column> seedColumns,
-                                    Map<String, String> seedParameters)
+    private PartitionWithStatistics makePartition(String databaseName,
+                                                  String tableName,
+                                                  String partitionEntry,
+                                                  Storage seedStorage,
+                                                  List<Column> seedColumns,
+                                                  Map<String, String> seedParameters)
     {
         List<String> parts = nSplitter.splitToList(partitionEntry);
-        return new Partition(
+        Partition partition = new Partition(
                 databaseName,
                 tableName,
                 pSplitter.splitToList(getNormalizedValue(parts.get(0))),
@@ -333,6 +337,11 @@ public class HivePartitionUtils {
                         String.format("%s/%s", seedStorage.getLocation(), parts.get(0))),
                 seedColumns,
                 seedParameters);
+        PartitionStatistics statistics = new PartitionStatistics(
+                HiveBasicStatistics.createEmptyStatistics(),
+                ImmutableMap.of());
+
+        return new PartitionWithStatistics(partition, partitionEntry, statistics);
     }
 
     protected void dropPartition(ExtendedHiveMetastore store,
@@ -360,6 +369,10 @@ public class HivePartitionUtils {
     {
         List<String> partitionValues = pSplitter.splitToList(getNormalizedValue(partitionValue));
         Optional<Partition> partition = store.getPartition(databaseName, tableName, partitionValues);
+        PartitionStatistics statistics = store.getPartitionStatistics(databaseName, tableName,
+                                            ImmutableSet.of(partitionValue))
+                                            .get(partitionValue);
+
         if (!partition.isPresent()) {
             throw new RuntimeException(partitionValue + " partition does not exists");
         }
@@ -378,7 +391,10 @@ public class HivePartitionUtils {
                 partition.get().getColumns(),
                 partition.get().getParameters());
 
-        store.alterPartition(databaseName, tableName, newPartition);
+        PartitionWithStatistics partitionWithStatistics = new PartitionWithStatistics(
+                newPartition, partitionValue, statistics);
+
+        store.alterPartition(databaseName, tableName, partitionWithStatistics);
     }
 
     private String getPartition(ExtendedHiveMetastore store,
