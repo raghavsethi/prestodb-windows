@@ -30,8 +30,8 @@ dependencies {
         exclude(module: 'slf4j-log4j12')
     }
     compile group: 'com.googlecode.json-simple', name: 'json-simple', version:'1.1'
-    compile group: 'org.eclipse.jetty', name: 'jetty-proxy', version: '9.4.12.RC0'
-    compile group: 'org.eclipse.jetty', name: 'jetty-servlets', version: '9.4.12.RC0'
+    compile group: 'org.eclipse.jetty', name: 'jetty-proxy', version: '9.4.12.v20180830'
+    compile group: 'org.eclipse.jetty', name: 'jetty-servlets', version: '9.4.12.v20180830'
     testCompile(group: 'org.testng', name: 'testng', version:'6.10') {
         exclude(module: 'junit')
         exclude(module: 'guice')
