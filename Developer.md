@@ -1,7 +1,7 @@
 ## Requirements
 
 * Windows, Mac, or Linux
-* Java 8 Update 92 or higher, 64-bit. OpenJDK preferred
+* Java 8 Update 151 or higher, 64-bit. OpenJDK preferred
 * Gradle 3.3 and Maven 3.3.9+ (for building)
 * IntelliJ IDEA 2018.1 or higher
 

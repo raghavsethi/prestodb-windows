@@ -17,10 +17,12 @@ import com.facebook.presto.plugin.jdbc.JdbcConnectorId;
 import com.facebook.presto.plugin.jdbc.JdbcMetadataConfig;
 import com.facebook.presto.plugin.jdbc.JdbcRecordSetProvider;
 import com.facebook.presto.plugin.jdbc.JdbcSplitManager;
+import com.facebook.presto.spi.connector.ConnectorAccessControl;
 import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.google.inject.Scopes;
 
+import static com.google.inject.multibindings.OptionalBinder.newOptionalBinder;
 import static io.airlift.configuration.ConfigBinder.configBinder;
 import static java.util.Objects.requireNonNull;
 
@@ -37,6 +39,7 @@ public class JdbcModule
     @Override
     public void configure(Binder binder)
     {
+        newOptionalBinder(binder, ConnectorAccessControl.class);
         binder.bind(com.facebook.presto.plugin.jdbc.JdbcClient.class).to(JdbcClient.class);
         binder.bind(JdbcConnectorId.class).toInstance(new JdbcConnectorId(connectorId));
         binder.bind(JdbcMetadataFactory.class).in(Scopes.SINGLETON);

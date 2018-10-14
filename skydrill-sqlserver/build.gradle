@@ -34,7 +34,7 @@ exclude(module: 'junit')
 exclude(module: 'guice')
     }
     testCompile group: 'com.facebook.presto', name: 'presto-main', version:"${prestoVersion}"
-    compile group: 'io.airlift', name: 'slice', version:'0.35'
+    compile group: 'io.airlift', name: 'slice', version:'0.36'
     compile group: 'com.fasterxml.jackson.core', name: 'jackson-annotations', version:'2.8.1'
     compile group: 'io.airlift', name: 'units', version:'1.0'
     compile group: 'com.facebook.presto', name: 'presto-spi', version:"${prestoVersion}"
